@@ -27,9 +27,11 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
+                    padding: const EdgeInsets.only(top: 5.0),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
@@ -51,20 +53,16 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                 ),
                 SizedBox(height: size.height * 0.01),
                 Center(
-                  child: SizedBox(
-                    width: size.width * 0.8,
-                    height: size.height * 0.6,
-                    child: FlipWidget(
-                      leftToRight: true,
-                      key: flipKey,
-                      child: SizedBox(
-                        width: size.width * 0.8,
-                        height: size.height * 0.6,
-                        child: Card(
-                          color: Colors.white,
-                          elevation: 2,
-                          child: Image.asset('assets/images/$index.png'),
-                        ),
+                  child: FlipWidget(
+                    leftToRight: true,
+                    key: flipKey,
+                    child: SizedBox(
+                      width: size.width * 0.8,
+                      height: size.height * 0.55,
+                      child: Card(
+                        color: Colors.white,
+                        elevation: 3,
+                        child: Image.asset('assets/images/$index.png'),
                       ),
                     ),
                   ),
@@ -159,6 +157,11 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
             ),
           ),
         ),
+      ),
+      bottomNavigationBar: Container(
+        color: Colors.grey.shade300,
+        height: size.height * 0.1,
+        child: const Center(child: Text('banner Ad')),
       ),
     );
   }

@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flipbook/model/flip_book.dart';
+import 'package:flipbook/pages/new_flip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -14,8 +17,16 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final List<double> heights = [100, 50, 20, 60, 80, 100];
   final searchController = TextEditingController();
+  static final List<FlipBook> initialBooks = List.generate(
+      10,
+      (index) => FlipBook(
+            title: generateRandomWord(),
+            creationDate: Jiffy.parseFromDateTime(DateTime.now())
+                .format(pattern: "yyyy/MM/dd hh:mm"),
+            imageUrls: List.generate(8, (i) => "assets/images/${i + 1}.png"),
+          ));
+  List<FlipBook> books = initialBooks;
   @override
   void initState() {
     super.initState();
@@ -38,31 +49,46 @@ class _HomeState extends State<Home> {
               buildHeader(context),
               SizedBox(height: size.height * 0.01),
               buildSearchField(),
-              SizedBox(height: size.height * 0.01),
               buildBody(),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        heroTag: const ValueKey("edit"),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NewFlip()),
+          );
+        },
         child: const Icon(Icons.edit),
+      ),
+      bottomNavigationBar: Container(
+        color: Colors.grey.shade300,
+        height: size.height * 0.1,
+        child: const Center(child: Text('banner Ad')),
       ),
     );
   }
 
-  TextField buildSearchField() {
-    return TextField(
-      controller: searchController,
-      decoration: InputDecoration(
-        hintText: "Search",
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-        prefixIcon: const Icon(Icons.search),
-        filled: true,
-        fillColor: Colors.grey[200],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
+  Widget buildSearchField() {
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.06,
+      child: TextField(
+        keyboardType: TextInputType.name,
+        controller: searchController,
+        decoration: InputDecoration(
+          hintText: "Search",
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+          prefixIcon: const Icon(Icons.search),
+          filled: true,
+          fillColor: Colors.grey[200],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );
@@ -71,29 +97,27 @@ class _HomeState extends State<Home> {
   Expanded buildBody() {
     final size = MediaQuery.of(context).size;
     return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: StaggeredGrid.count(
-          axisDirection: AxisDirection.down,
-          crossAxisCount: 2,
-          mainAxisSpacing: size.height * 0.02,
-          crossAxisSpacing: size.width * 0.05,
-          children: List.generate(
-            heights.length,
-            (index) => StaggeredGridTile.fit(
-              crossAxisCellCount: 1,
-              child: FlipBookCard(
-                book: FlipBook(
-                  title: 'title$index title$index title$index title$index',
-                  creationDate: Jiffy.parseFromDateTime(DateTime.now())
-                      .format(pattern: "yyyy/MM/dd hh:mm"),
-                  imageUrls:
-                      List.generate(8, (i) => "assets/images/${i + 1}.png"),
+      child: ListView(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: StaggeredGrid.count(
+              axisDirection: AxisDirection.down,
+              crossAxisCount: 2,
+              mainAxisSpacing: size.height * 0.01,
+              crossAxisSpacing: size.width * 0.02,
+              children: List.generate(
+                books.length,
+                (index) => StaggeredGridTile.fit(
+                  crossAxisCellCount: 1,
+                  child: FlipBookCard(
+                    book: books[index],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -135,5 +159,24 @@ class _HomeState extends State<Home> {
     );
   }
 
-  void filterBooks() {}
+  void filterBooks() {
+    if (searchController.text.isEmpty) {
+      books = initialBooks;
+      return;
+    }
+    books = initialBooks
+        .where((element) => element.title
+            .toLowerCase()
+            .startsWith(searchController.text.toLowerCase()))
+        .toList();
+  }
+
+  static String generateRandomWord() {
+    final random = Random();
+    const chars = 'ABCDEFGHIJKLMNOPQRSTU';
+    final length =
+        random.nextInt(20) + 10; // generate a random length between 1 and 6
+    return String.fromCharCodes(Iterable.generate(
+        length, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
+  }
 }

@@ -9,7 +9,7 @@ class NewFlip extends StatefulWidget {
 }
 
 class _NewFlipState extends State<NewFlip> {
-  final fliBookNameController = TextEditingController();
+  final flipBookNameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,9 @@ class _NewFlipState extends State<NewFlip> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   InkWell(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
                     child: Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Row(
@@ -57,30 +59,33 @@ class _NewFlipState extends State<NewFlip> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   FloatingActionButton(
+                    heroTag: const ValueKey("images"),
                     backgroundColor: Colors.black,
                     onPressed: () {},
                     mini: true,
-                    child: Icon(
+                    child: const Icon(
                       FontAwesomeIcons.images,
                       color: Colors.white,
                       size: 17,
                     ),
                   ),
                   FloatingActionButton(
+                    heroTag: const ValueKey("scanner"),
                     backgroundColor: Colors.black,
                     onPressed: () {},
                     mini: true,
-                    child: Icon(
+                    child: const Icon(
                       Icons.document_scanner_outlined,
                       color: Colors.white,
                       size: 18,
                     ),
                   ),
                   FloatingActionButton(
+                    heroTag: const ValueKey("camera"),
                     backgroundColor: Colors.black,
                     onPressed: () {},
                     mini: true,
-                    child: Icon(
+                    child: const Icon(
                       Icons.camera_alt,
                       color: Colors.white,
                       size: 20,
@@ -92,6 +97,11 @@ class _NewFlipState extends State<NewFlip> {
           ),
         ),
       ),
+      bottomNavigationBar: Container(
+        color: Colors.grey.shade300,
+        height: size.height * 0.1,
+        child: const Center(child: Text('banner Ad')),
+      ),
     );
   }
 
@@ -99,15 +109,16 @@ class _NewFlipState extends State<NewFlip> {
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.09,
       child: TextField(
-        controller: fliBookNameController,
+        controller: flipBookNameController,
         onSubmitted: (val) {
           if (mounted) {
             setState(() {
-              fliBookNameController.text = val;
+              flipBookNameController.text = val;
             });
           }
         },
         maxLength: 30,
+        keyboardType: TextInputType.name,
         decoration: InputDecoration(
           hintText: "Flip Book's Title",
           contentPadding:

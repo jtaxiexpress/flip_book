@@ -1,8 +1,13 @@
-import 'package:flipbook/model/flip_book.dart';
-import 'package:flipbook/pages/preview_flip_book.dart';
+import 'package:flipbook/pages/home.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.white,
+    statusBarIconBrightness: Brightness.dark,
+  ));
   runApp(const FlipBookApp());
 }
 
@@ -12,12 +17,7 @@ class FlipBookApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: PreviewFlipBook(
-        flipBook: FlipBook(
-            title: "title",
-            creationDate: "creationDate",
-            imageUrls: ["imageUrls"]),
-      ),
+      home: Home(),
       debugShowCheckedModeBanner: false,
     );
   }
