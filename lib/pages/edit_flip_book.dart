@@ -1,9 +1,9 @@
-import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flip_widget/flip_widget.dart';
+import 'package:flipbook/custom_widgets/flipped_container.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/pages/preview_flip_book.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,32 +11,35 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class EditFlipBook extends StatefulWidget {
-  const EditFlipBook({Key? key, required this.flipBook}) : super(key: key);
+  const EditFlipBook(
+      {Key? key, required this.flipBook, this.isFromNewFlipPage = false})
+      : super(key: key);
   final FlipBook flipBook;
+  final bool isFromNewFlipPage;
   @override
   State<EditFlipBook> createState() => _EditFlipBookState();
 }
 
 class _EditFlipBookState extends State<EditFlipBook> {
-  double flipSpeed = 0.5;
-  int index = 1;
+  double flipSpeed = 25;
   final flipKey = GlobalKey<FlipWidgetState>();
 
   var flipBookNameController = TextEditingController();
-  PageController _controller = PageController(initialPage: 0);
-  List<String> _images =
-      List.generate(8, (index) => "assets/images/${index + 1}.png");
 
   bool hasFlipAnimation = true;
+
+  final carouselController = CarouselController();
+  int activeIndex = 0;
+
+  @override
+  void dispose() {
+    super.dispose();
+    flipBookNameController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    Image image = Image.asset(widget.flipBook.imageUrls[0]);
-    Completer<ui.Image> completer = Completer<ui.Image>();
-    image.image.resolve(const ImageConfiguration()).addListener(
-        ImageStreamListener((ImageInfo info, bool synchronousCall) {
-      completer.complete(info.image);
-    }));
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -49,45 +52,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
                 SizedBox(height: size.height * 0.01),
                 buildCameraOptionsRow(),
                 SizedBox(height: size.height * 0.01),
-                SizedBox(
-                  width: size.width,
-                  height: size.height * 0.4,
-                  child: CarouselSlider.builder(
-                    options: CarouselOptions(
-                      autoPlay: false,
-                      aspectRatio: 1.0,
-                      viewportFraction: 0.63,
-                      // enlargeCenterPage: true,
-                    ),
-                    itemCount: widget.flipBook.imageUrls.length,
-                    itemBuilder: (context, index, pageIndex) =>
-                        FutureBuilder<ui.Image>(
-                      future: completer.future,
-                      builder: (context, snapshot) {
-                        return snapshot.hasData
-                            ? SizedBox(
-                                width:
-                                    getWidth(snapshot.data!.width.toDouble()),
-                                height:
-                                    getHeight(snapshot.data!.height.toDouble()),
-                                child: Card(
-                                  color: Colors.white,
-                                  elevation: 3,
-                                  shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.zero),
-                                  child: Image.asset(
-                                    widget.flipBook.imageUrls[index],
-                                  ),
-                                ),
-                              )
-                            : const Text('Loading...');
-                      },
-                    ),
-                  ),
-                ),
-
+                buildCarousel(size),
                 buildSwipePreviewBtnsRow(),
-                // SizedBox(height: size.height * 0.01),
                 buildDownloadUploadBtnsRow(size, context),
                 SizedBox(height: size.height * 0.01),
                 buildFlipAnimationTile(),
@@ -102,6 +68,80 @@ class _EditFlipBookState extends State<EditFlipBook> {
         height: size.height * 0.1,
         child: const Center(child: Text('banner Ad')),
       ),
+    );
+  }
+
+  SizedBox buildCarousel(ui.Size size) {
+    return SizedBox(
+      width: size.width,
+      height: size.height * 0.4,
+      child: buildFlipBookItemsList(size),
+    );
+  }
+
+  CarouselSlider buildFlipBookItemsList(ui.Size size) {
+    return CarouselSlider.builder(
+      carouselController: carouselController,
+      disableGesture: false,
+      options: CarouselOptions(
+          autoPlay: false,
+          aspectRatio: 1.0,
+          initialPage: activeIndex,
+          scrollPhysics: const NeverScrollableScrollPhysics(),
+          viewportFraction: 0.63,
+          onPageChanged: (index, reason) {
+            activeIndex = index;
+            if (mounted) setState(() {});
+          }
+          // enlargeCenterPage: true,
+          ),
+      itemCount: widget.flipBook.imageUrls.length,
+      itemBuilder: (context, index, pageIndex) => buildFlipItem(size, index),
+    );
+  }
+
+  Widget buildFlipItem(ui.Size size, index) {
+    return GestureDetector(
+      onHorizontalDragUpdate: hasFlipAnimation
+          ? null
+          : (val) {
+              if (val.delta.dx < 0) {
+                //left swipe
+                carouselController.nextPage(
+                    duration: Duration(milliseconds: 101 - flipSpeed.toInt()));
+              } else if (val.delta.dx > 0) {
+                //right swipe
+                carouselController.previousPage(
+                    duration: Duration(milliseconds: 101 - flipSpeed.toInt()));
+              }
+            },
+      child: SizedBox(
+        width: size.width * 0.55,
+        height: size.height * 0.4,
+        child: hasFlipAnimation
+            ? FlipContainer(
+                onSwipe: onActiveCardSwipe,
+                child: buildFlipCard(index),
+              )
+            : buildFlipCard(index),
+      ),
+    );
+  }
+
+  Card buildFlipCard(index) {
+    return Card(
+      color: Colors.white,
+      elevation: 3,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      child: widget.isFromNewFlipPage
+          ? Image.file(
+              File(widget.flipBook.imageUrls[index]),
+            )
+          //TODO
+          // make it network
+          : Image.asset(
+              widget.flipBook.imageUrls[index],
+            ),
     );
   }
 
@@ -188,11 +228,14 @@ class _EditFlipBookState extends State<EditFlipBook> {
         const Expanded(child: SizedBox()),
         Expanded(
           flex: 2,
-          child: IconButton(
-            onPressed: null,
-            icon: Icon(
-              Icons.swipe_outlined,
-              color: Colors.grey.shade600,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              onPressed: null,
+              icon: Icon(
+                Icons.swipe_left_outlined,
+                color: Colors.grey.shade600,
+              ),
             ),
           ),
         ),
@@ -278,8 +321,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
                           height: size.height * 0.05,
                           child: CupertinoSlider(
                             value: flipSpeed,
-                            min: -2,
-                            max: 2,
+                            min: 1,
+                            max: 40,
                             onChanged: onFlipSpeedChanged,
                           ),
                         )
@@ -289,8 +332,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
                             value: flipSpeed,
                             onChanged: onFlipSpeedChanged,
                             label: flipSpeed.toStringAsFixed(2),
-                            min: -2,
-                            max: 2,
+                            min: 1,
+                            max: 40,
                           ),
                         ),
                 ],
@@ -379,6 +422,17 @@ class _EditFlipBookState extends State<EditFlipBook> {
       setState(() {
         flipSpeed = value;
       });
+    }
+  }
+
+  void onActiveCardSwipe(isLeftSwipe) {
+    if (isLeftSwipe) {
+      carouselController.nextPage(
+        duration: Duration(milliseconds: 41 - flipSpeed.toInt()),
+      );
+    } else {
+      carouselController.previousPage(
+          duration: Duration(milliseconds: 41 - flipSpeed.toInt()));
     }
   }
 }

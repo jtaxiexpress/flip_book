@@ -41,6 +41,11 @@ dependencies:
   ffmpeg_kit_flutter: ^5.1.0
   jiffy: ^6.1.0
   carousel_slider: ^4.2.1
+  image_picker: ^0.8.7+1
+  path_provider: ^2.0.14
+  card_swiper: ^2.0.4
+  flip_card: ^0.7.0
+  page_flip: ^0.0.3
 
 dev_dependencies:
   flutter_test:
