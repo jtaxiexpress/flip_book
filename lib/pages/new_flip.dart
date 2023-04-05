@@ -1,8 +1,13 @@
+import 'dart:io';
+
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:document_scanner_flutter/configs/configs.dart';
+import 'package:document_scanner_flutter/document_scanner_flutter.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'edit_flip_book.dart';
 
@@ -78,7 +83,7 @@ class _NewFlipState extends State<NewFlip> {
                   FloatingActionButton(
                     heroTag: const ValueKey("scanner"),
                     backgroundColor: Colors.black,
-                    onPressed: () {},
+                    onPressed: onImagesFromScannerBtnPressed,
                     mini: true,
                     child: const Icon(
                       Icons.document_scanner_outlined,
@@ -89,7 +94,7 @@ class _NewFlipState extends State<NewFlip> {
                   FloatingActionButton(
                     heroTag: const ValueKey("camera"),
                     backgroundColor: Colors.black,
-                    onPressed: () {},
+                    onPressed: onImagesFromCameraBtnPressed,
                     mini: true,
                     child: const Icon(
                       Icons.camera_alt,
@@ -100,30 +105,29 @@ class _NewFlipState extends State<NewFlip> {
                 ],
               ),
               SizedBox(height: size.height * 0.02),
-              // SizedBox(
-              //   height: size.height * 0.6,
-              //   width: size.width,
-              //   child: Swiper(
-              //     loop: false,
-              //     itemBuilder: (BuildContext context, int index) {
-              //       return Card(
-              //         color: Colors.white,
-              //         elevation: 3,
-              //         shape: const RoundedRectangleBorder(
-              //             borderRadius: BorderRadius.zero),
-              //         child: Image.file(File(imagesPaths[index])),
-              //       );
-              //     },
-              //     itemCount: imagesPaths.length,
-              //     itemWidth: size.width * 0.55,
-              //     itemHeight: size.height * 0.4,
-              //     layout: SwiperLayout.DEFAULT,
-              //     viewportFraction: 0.64,
-              //     controller: ,
-              //    physics: NeverScrollableScrollPhysics(),
-              //     // scale: 0.8,
-              //   ),
-              // ),
+              SizedBox(
+                  height: size.height * 0.6,
+                  width: size.width,
+                  child: CarouselSlider.builder(
+                    options: CarouselOptions(
+                      autoPlay: false,
+                      aspectRatio: 1.0,
+                      viewportFraction: 0.63,
+                      enableInfiniteScroll: false,
+                    ),
+                    itemCount: imagesPaths.length,
+                    itemBuilder: (context, index, pageIndex) => SizedBox(
+                      width: size.width * 0.55,
+                      height: size.height * 0.4,
+                      child: Card(
+                        color: Colors.white,
+                        elevation: 3,
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero),
+                        child: Image.file(File(imagesPaths[index])),
+                      ),
+                    ),
+                  )),
             ],
           ),
         ),
@@ -166,36 +170,31 @@ class _NewFlipState extends State<NewFlip> {
   }
 
   void onImagesFromGalleryBtnPressed() async {
-    final directory = await getApplicationDocumentsDirectory();
     final List<XFile> images = await picker.pickMultiImage();
     print(images.length);
-    for (int i = 0; i < images.length; i++) {
-      final imagePath = '${directory.path}/${images[i].name}';
-      images[i].saveTo(imagePath).then((value) => print("image saved"));
-      print(imagePath);
-      imagesPaths.add(imagePath);
-    }
-    if (images.isNotEmpty) {
-      if (images.length >= 6) {
+    images.forEach((element) {
+      imagesPaths.add(element.path);
+    });
+    if (mounted) setState(() {});
+    if (imagesPaths.isNotEmpty) {
+      if (imagesPaths.length >= 6) {
         //TODO
         // show Ad
-      }
-      FlipBook flipBook = FlipBook(
-          title: flipBookNameController.text,
-          creationDate: DateTime.now().toIso8601String(),
-          imageUrls: images.map((e) => e.path).toList());
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EditFlipBook(
-            flipBook: flipBook,
-            isFromNewFlipPage: true,
+        FlipBook flipBook = FlipBook(
+            title: flipBookNameController.text,
+            creationDate: DateTime.now().toIso8601String(),
+            imageUrls: images.map((e) => e.path).toList());
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditFlipBook(
+              flipBook: flipBook,
+              isFromNewFlipPage: true,
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
-    if (mounted) setState(() {});
     // print(imagesPaths);
   }
 
@@ -203,6 +202,70 @@ class _NewFlipState extends State<NewFlip> {
   void dispose() {
     super.dispose();
     flipBookNameController.dispose();
+  }
+
+  void onImagesFromScannerBtnPressed() async {
+    try {
+      final scannedImg = await DocumentScannerFlutter.launch(
+        context,
+        source: ScannerFileSource.CAMERA,
+      ); // Or ScannerFileSource.GALLERY
+      if (scannedImg != null) {
+        imagesPaths.add(scannedImg.path);
+      }
+      if (imagesPaths.isNotEmpty) {
+        if (imagesPaths.length >= 6) {
+          //TODO
+          // show Ad
+          FlipBook flipBook = FlipBook(
+              title: flipBookNameController.text,
+              creationDate: DateTime.now().toIso8601String(),
+              imageUrls: imagesPaths);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EditFlipBook(
+                flipBook: flipBook,
+                isFromNewFlipPage: true,
+              ),
+            ),
+          );
+        }
+      }
+      if (mounted) setState(() {});
+    } on PlatformException {
+      // 'Failed to get document path or operation cancelled!';
+    }
+  }
+
+  void onImagesFromCameraBtnPressed() async {
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+    print(image?.path);
+    // final imagePath = '${directory.path}/${images[i].name}';
+    if (image != null) {
+      imagesPaths.add(image.path);
+    }
+    if (imagesPaths.isNotEmpty) {
+      if (imagesPaths.length >= 6) {
+        //TODO
+        // show Ad
+        FlipBook flipBook = FlipBook(
+            title: flipBookNameController.text,
+            creationDate: DateTime.now().toIso8601String(),
+            imageUrls: imagesPaths);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditFlipBook(
+              flipBook: flipBook,
+              isFromNewFlipPage: true,
+            ),
+          ),
+        );
+      }
+    }
+    if (mounted) setState(() {});
+    // print(imagesPaths);
   }
 }
 

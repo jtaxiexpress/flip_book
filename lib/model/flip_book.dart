@@ -9,7 +9,7 @@ class FlipBook {
     required this.title,
     required this.creationDate,
     required this.imageUrls,
-    this.flipSpeed = 1.5,
+    this.flipSpeed = 25,
     this.hasFlipAnimation = true,
   });
 

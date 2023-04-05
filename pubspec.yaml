@@ -46,6 +46,7 @@ dependencies:
   card_swiper: ^2.0.4
   flip_card: ^0.7.0
   page_flip: ^0.0.3
+  document_scanner_flutter: ^0.2.7
 
 dev_dependencies:
   flutter_test:

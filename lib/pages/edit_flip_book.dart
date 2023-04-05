@@ -32,6 +32,18 @@ class _EditFlipBookState extends State<EditFlipBook> {
   int activeIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    if (mounted) {
+      setState(() {
+        widget.flipBook.flipSpeed = widget.flipBook.flipSpeed == 25
+            ? widget.flipBook.flipSpeed
+            : flipSpeed;
+      });
+    }
+  }
+
+  @override
   void dispose() {
     super.dispose();
     flipBookNameController.dispose();
@@ -79,7 +91,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
     );
   }
 
-  CarouselSlider buildFlipBookItemsList(ui.Size size) {
+  Widget buildFlipBookItemsList(ui.Size size) {
     return CarouselSlider.builder(
       carouselController: carouselController,
       disableGesture: false,
@@ -87,21 +99,38 @@ class _EditFlipBookState extends State<EditFlipBook> {
           autoPlay: false,
           aspectRatio: 1.0,
           initialPage: activeIndex,
+          enableInfiniteScroll: false,
           scrollPhysics: const NeverScrollableScrollPhysics(),
-          viewportFraction: 0.63,
+          viewportFraction: 0.7,
           onPageChanged: (index, reason) {
             activeIndex = index;
             if (mounted) setState(() {});
           }
           // enlargeCenterPage: true,
           ),
-      itemCount: widget.flipBook.imageUrls.length,
-      itemBuilder: (context, index, pageIndex) => buildFlipItem(size, index),
+      itemCount: widget.flipBook.imageUrls.length > 1
+          ? widget.flipBook.imageUrls.length + 1
+          : widget.flipBook.imageUrls.length,
+      itemBuilder: (context, index, pageIndex) {
+        if (index == widget.flipBook.imageUrls.length) {
+          return Center(
+            child: ElevatedButton.icon(
+              onPressed: () {
+                carouselController.animateToPage(0);
+              },
+              icon: const Icon(FontAwesomeIcons.arrowsRotate),
+              label: Text('go to first'),
+            ),
+          );
+        }
+        return buildFlipItem(size, index);
+      },
     );
   }
 
   Widget buildFlipItem(ui.Size size, index) {
     return GestureDetector(
+      key: Key("Key $index"),
       onHorizontalDragUpdate: hasFlipAnimation
           ? null
           : (val) {
@@ -321,8 +350,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
                           height: size.height * 0.05,
                           child: CupertinoSlider(
                             value: flipSpeed,
-                            min: 1,
-                            max: 40,
+                            min: 20,
+                            max: 50,
                             onChanged: onFlipSpeedChanged,
                           ),
                         )
@@ -332,8 +361,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
                             value: flipSpeed,
                             onChanged: onFlipSpeedChanged,
                             label: flipSpeed.toStringAsFixed(2),
-                            min: 1,
-                            max: 40,
+                            min: 20,
+                            max: 50,
                           ),
                         ),
                 ],
@@ -413,6 +442,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
     if (mounted) {
       setState(() {
         hasFlipAnimation = value;
+        widget.flipBook.hasFlipAnimation = hasFlipAnimation;
       });
     }
   }
@@ -421,6 +451,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
     if (mounted) {
       setState(() {
         flipSpeed = value;
+        widget.flipBook.flipSpeed = flipSpeed;
       });
     }
   }

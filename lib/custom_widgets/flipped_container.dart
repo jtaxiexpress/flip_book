@@ -69,7 +69,7 @@ class _FlipContainerState extends State<FlipContainer>
           return Transform(
             transform: matrix,
             alignment: Alignment.center,
-            child: _isFrontVisible ? widget.child : const Text(''),
+            child: widget.child,
           );
         },
       ),

@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:flip_widget/flip_widget.dart';
 import 'package:flipbook/model/flip_book.dart';
+import 'package:flipbook/utilities/video_creator.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 class PreviewFlipBook extends StatefulWidget {
   const PreviewFlipBook({Key? key, required this.flipBook}) : super(key: key);
@@ -11,9 +17,21 @@ class PreviewFlipBook extends StatefulWidget {
 }
 
 class _PreviewFlipBookState extends State<PreviewFlipBook> {
-  double flipSpeed = 0.5;
+  double flipSpeed = 25;
   int index = 1;
   final flipKey = GlobalKey<FlipWidgetState>();
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: 10)).then((value) {
+      if (mounted) {
+        setState(() {
+          flipSpeed = widget.flipBook.flipSpeed;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -62,7 +80,9 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                       child: Card(
                         color: Colors.white,
                         elevation: 3,
-                        child: Image.asset('assets/images/$index.png'),
+                        child: widget.flipBook.imageUrls[0].contains("/data/")
+                            ? Image.file(File(widget.flipBook.imageUrls[0]))
+                            : Image.asset(widget.flipBook.imageUrls[0]),
                       ),
                     ),
                   ),
@@ -70,18 +90,13 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                 Center(
                   child: IconButton(
                     onPressed: () async {
-                      // Timer.periodic(Duration(milliseconds: 2), (timer) {
-                      //   if (mounted)
-                      //     setState(() {
-                      //       index++;
-                      //     });
-                      //   if (index == 8) {
-                      //     timer.cancel();
-                      //     flipKey.currentState?.stopFlip();
-                      //   } else {
-                      //     flipKey.currentState?.startFlip();
-                      //   }
-                      // });
+                      final dir = await getApplicationDocumentsDirectory();
+                      final vc = VideoCreator(
+                          imagePaths: widget.flipBook.imageUrls,
+                          outputPath: join(dir.path, "mVideo.mp4"));
+                      vc
+                          .createVideo()
+                          .then((value) => debugPrint("Video created"));
                     },
                     icon: Icon(FontAwesomeIcons.play),
                   ),
@@ -119,7 +134,7 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                   ),
                   elevation: 3,
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(10.0),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -134,18 +149,26 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                                 style: TextStyle(
                                     fontWeight: FontWeight.w500, fontSize: 20),
                               ),
-                              Slider(
-                                value: flipSpeed,
-                                onChanged: (value) {
-                                  if (mounted)
-                                    setState(() {
-                                      flipSpeed = value;
-                                    });
-                                },
-                                label: flipSpeed.toStringAsFixed(2),
-                                min: -2,
-                                max: 2,
-                              ),
+                              Platform.isIOS
+                                  ? SizedBox(
+                                      height: size.height * 0.05,
+                                      child: CupertinoSlider(
+                                        value: flipSpeed,
+                                        min: 20,
+                                        max: 40,
+                                        onChanged: onSliderChanged,
+                                      ),
+                                    )
+                                  : SizedBox(
+                                      height: size.height * 0.05,
+                                      child: Slider(
+                                        value: flipSpeed,
+                                        onChanged: onSliderChanged,
+                                        label: flipSpeed.toStringAsFixed(2),
+                                        min: 20,
+                                        max: 40,
+                                      ),
+                                    ),
                             ],
                           ),
                         ),
@@ -164,5 +187,13 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
         child: const Center(child: Text('banner Ad')),
       ),
     );
+  }
+
+  void onSliderChanged(value) {
+    if (mounted) {
+      setState(() {
+        flipSpeed = value;
+      });
+    }
   }
 }
