@@ -27,9 +27,12 @@ class _EditFlipBookState extends State<EditFlipBook> {
   var flipBookNameController = TextEditingController();
 
   bool hasFlipAnimation = true;
+  final ScrollController scrollController = ScrollController();
 
   final carouselController = CarouselController();
   int activeIndex = 0;
+
+  bool isDraggingItem = false;
 
   @override
   void initState() {
@@ -87,44 +90,78 @@ class _EditFlipBookState extends State<EditFlipBook> {
     return SizedBox(
       width: size.width,
       height: size.height * 0.4,
-      child: buildFlipBookItemsList(size),
+      child: ReorderableListView.builder(
+        scrollDirection: Axis.horizontal,
+        scrollController: scrollController,
+        physics: const NeverScrollableScrollPhysics(),
+        header: SizedBox(
+            width: MediaQuery.of(context).size.width *
+                (widget.flipBook.imageUrls.length == 1
+                    ? 0.18
+                    : 0.15)), // scrollCon
+        footer: SizedBox(
+            width: MediaQuery.of(context).size.width *
+                (widget.flipBook.imageUrls.length == 1
+                    ? 0.18
+                    : 0.15)), // scrollCon// troller: scrollController,
+        onReorder: (oldIndex, newIndex) {
+          setState(() {
+            if (newIndex > oldIndex) {
+              newIndex -= 1;
+            }
+            final item = widget.flipBook.imageUrls.removeAt(oldIndex);
+            widget.flipBook.imageUrls.insert(newIndex, item);
+          });
+        },
+
+        itemCount: widget.flipBook.imageUrls.length,
+        itemBuilder: (context, index) {
+          return buildFlipItem(size, index);
+        },
+      ), //buildFlipBookItemsList(size),
     );
   }
 
   Widget buildFlipBookItemsList(ui.Size size) {
-    return CarouselSlider.builder(
-      carouselController: carouselController,
-      disableGesture: false,
-      options: CarouselOptions(
-          autoPlay: false,
-          aspectRatio: 1.0,
-          initialPage: activeIndex,
-          enableInfiniteScroll: false,
-          scrollPhysics: const NeverScrollableScrollPhysics(),
-          viewportFraction: 0.7,
-          onPageChanged: (index, reason) {
-            activeIndex = index;
-            if (mounted) setState(() {});
-          }
-          // enlargeCenterPage: true,
-          ),
-      itemCount: widget.flipBook.imageUrls.length > 1
-          ? widget.flipBook.imageUrls.length + 1
-          : widget.flipBook.imageUrls.length,
-      itemBuilder: (context, index, pageIndex) {
-        if (index == widget.flipBook.imageUrls.length) {
-          return Center(
-            child: ElevatedButton.icon(
-              onPressed: () {
-                carouselController.animateToPage(0);
-              },
-              icon: const Icon(FontAwesomeIcons.arrowsRotate),
-              label: Text('go to first'),
+    return Draggable(
+      feedback: const Text('Hello'),
+      child: CarouselSlider.builder(
+        carouselController: carouselController,
+        disableGesture: false,
+        options: CarouselOptions(
+            autoPlay: false,
+            aspectRatio: 1.0,
+            initialPage: activeIndex,
+            enableInfiniteScroll: false,
+            scrollPhysics: const NeverScrollableScrollPhysics(),
+            viewportFraction: 0.7,
+            onPageChanged: (index, reason) {
+              activeIndex = index;
+              if (mounted) setState(() {});
+            }
+            // enlargeCenterPage: true,
             ),
-          );
-        }
-        return buildFlipItem(size, index);
-      },
+        itemCount: widget.flipBook.imageUrls.length > 1
+            ? widget.flipBook.imageUrls.length + 1
+            : widget.flipBook.imageUrls.length,
+        itemBuilder: (context, index, pageIndex) {
+          if (index == widget.flipBook.imageUrls.length) {
+            return Center(
+              key: const Key('Button go to first'),
+              child: IgnorePointer(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    carouselController.animateToPage(0);
+                  },
+                  icon: const Icon(FontAwesomeIcons.arrowsRotate),
+                  label: const Text('go to first'),
+                ),
+              ),
+            );
+          }
+          return buildFlipItem(size, index);
+        },
+      ),
     );
   }
 
@@ -133,26 +170,21 @@ class _EditFlipBookState extends State<EditFlipBook> {
       key: Key("Key $index"),
       onHorizontalDragUpdate: hasFlipAnimation
           ? null
-          : (val) {
-              if (val.delta.dx < 0) {
-                //left swipe
-                carouselController.nextPage(
-                    duration: Duration(milliseconds: 101 - flipSpeed.toInt()));
-              } else if (val.delta.dx > 0) {
-                //right swipe
-                carouselController.previousPage(
-                    duration: Duration(milliseconds: 101 - flipSpeed.toInt()));
-              }
+          : (dt) {
+              controlScrollOfReorderableListView(dt.delta.dx < 0);
             },
-      child: SizedBox(
-        width: size.width * 0.55,
-        height: size.height * 0.4,
-        child: hasFlipAnimation
-            ? FlipContainer(
-                onSwipe: onActiveCardSwipe,
-                child: buildFlipCard(index),
-              )
-            : buildFlipCard(index),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
+        child: SizedBox(
+          width: size.width * 0.55,
+          height: size.height * 0.4,
+          child: hasFlipAnimation
+              ? FlipContainer(
+                  onSwipe: controlScrollOfReorderableListView,
+                  child: buildFlipCard(index),
+                )
+              : buildFlipCard(index),
+        ),
       ),
     );
   }
@@ -456,49 +488,20 @@ class _EditFlipBookState extends State<EditFlipBook> {
     }
   }
 
-  void onActiveCardSwipe(isLeftSwipe) {
+  void controlScrollOfReorderableListView(bool isLeftSwipe) {
     if (isLeftSwipe) {
-      carouselController.nextPage(
-        duration: Duration(milliseconds: 41 - flipSpeed.toInt()),
-      );
+      //left swipe
+      scrollController.animateTo(
+          scrollController.offset + MediaQuery.of(context).size.width * 0.67,
+          duration: Duration(milliseconds: flipSpeed.toInt()),
+          curve: Curves.easeInOut);
+      print("Left swipe");
     } else {
-      carouselController.previousPage(
-          duration: Duration(milliseconds: 41 - flipSpeed.toInt()));
+      scrollController.animateTo(
+          scrollController.offset - MediaQuery.of(context).size.width * 0.67,
+          duration: Duration(milliseconds: flipSpeed.toInt()),
+          curve: Curves.easeInOut);
+      print('Right swipe');
     }
   }
 }
-
-/*
-SizedBox(
-                  width: size.width,
-                  height: size.height * 0.4,
-                  child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: widget.flipBook.imageUrls.length,
-                      itemBuilder: (context, index) => FutureBuilder<ui.Image>(
-                          future: completer.future,
-                          builder: (context, snapshot) {
-                            return snapshot.hasData
-                                ? FlipWidget(
-                                    leftToRight: true,
-                                    key: flipKey,
-                                    child: SizedBox(
-                                      width: getWidth(
-                                          snapshot.data!.width.toDouble()),
-                                      height: getHeight(
-                                          snapshot.data!.height.toDouble()),
-                                      child: Card(
-                                        color: Colors.white,
-                                        elevation: 3,
-                                        shape: const RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.zero),
-                                        child: Image.asset(
-                                          widget.flipBook.imageUrls[0],
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                : const Text('Loading...');
-                          })),
-                ),
- */
