@@ -6,8 +6,6 @@ import 'package:flipbook/utilities/video_creator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 
 class PreviewFlipBook extends StatefulWidget {
   const PreviewFlipBook({Key? key, required this.flipBook}) : super(key: key);
@@ -80,7 +78,7 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                       child: Card(
                         color: Colors.white,
                         elevation: 3,
-                        child: widget.flipBook.imageUrls[0].contains("/data/")
+                        child: widget.flipBook.imageUrls[0].contains("/0/")
                             ? Image.file(File(widget.flipBook.imageUrls[0]))
                             : Image.asset(widget.flipBook.imageUrls[0]),
                       ),
@@ -90,13 +88,15 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                 Center(
                   child: IconButton(
                     onPressed: () async {
-                      final dir = await getApplicationDocumentsDirectory();
-                      final vc = VideoCreator(
-                          imagePaths: widget.flipBook.imageUrls,
-                          outputPath: join(dir.path, "mVideo.mp4"));
-                      vc
-                          .createVideo()
-                          .then((value) => debugPrint("Video created"));
+                      // final dir = await getApplicationDocumentsDirectory();
+                      // final outputFile=dir.path;
+                      final title = widget.flipBook.title.trim().isNotEmpty
+                          ? '"${widget.flipBook.title}"'
+                          : DateTime.now().millisecondsSinceEpoch.toString();
+                      final outputFile =
+                          "/storage/emulated/0/DCIM/Camera/$title.mp4";
+                      final vc = VideoCreator();
+                      vc.createVideo(widget.flipBook.imageUrls, outputFile);
                     },
                     icon: Icon(FontAwesomeIcons.play),
                   ),
@@ -149,26 +149,23 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                                 style: TextStyle(
                                     fontWeight: FontWeight.w500, fontSize: 20),
                               ),
-                              Platform.isIOS
-                                  ? SizedBox(
-                                      height: size.height * 0.05,
-                                      child: CupertinoSlider(
+                              SizedBox(
+                                height: size.height * 0.05,
+                                child: Platform.isIOS
+                                    ? CupertinoSlider(
                                         value: flipSpeed,
                                         min: 20,
-                                        max: 40,
+                                        max: 50,
                                         onChanged: onSliderChanged,
-                                      ),
-                                    )
-                                  : SizedBox(
-                                      height: size.height * 0.05,
-                                      child: Slider(
+                                      )
+                                    : Slider(
                                         value: flipSpeed,
                                         onChanged: onSliderChanged,
                                         label: flipSpeed.toStringAsFixed(2),
                                         min: 20,
-                                        max: 40,
+                                        max: 50,
                                       ),
-                                    ),
+                              )
                             ],
                           ),
                         ),

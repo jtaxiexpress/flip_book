@@ -10,7 +10,10 @@ import '../model/flip_book.dart';
 class FlipBookCard extends StatelessWidget {
   final FlipBook book;
 
-  const FlipBookCard({Key? key, required this.book}) : super(key: key);
+  final VoidCallback onPressed;
+
+  const FlipBookCard({Key? key, required this.book, required this.onPressed})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +24,7 @@ class FlipBookCard extends StatelessWidget {
       completer.complete(info.image);
     }));
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => EditFlipBook(flipBook: book)),
-        );
-      },
+      onTap: onPressed,
       onLongPress: () async {
         bool? confirmed = await showDeleteConfirmationDialog(context);
         if (confirmed == true) {
@@ -123,7 +121,7 @@ class FlipBookCard extends StatelessWidget {
         } else {
           // Show Material-style dialog on Android and other platforms
           return AlertDialog(
-            title: Text(capitalizedText(book.title)),
+            title: Text(capitalizeText(book.title)),
             content: const Text('Do you want to delete this Flip book?'),
             actions: <Widget>[
               TextButton(
@@ -153,11 +151,4 @@ class FlipBookCard extends StatelessWidget {
     if (h > size.height * 0.2) return h / 2;
     return h;
   }
-}
-
-String capitalizedText(String text) {
-  return text
-      .split(' ')
-      .map((word) => '${word[0].toUpperCase()}${word.substring(1)}')
-      .join(' ');
 }

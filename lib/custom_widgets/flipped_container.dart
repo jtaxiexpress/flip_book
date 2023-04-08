@@ -22,7 +22,7 @@ class _FlipContainerState extends State<FlipContainer>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 50),
     );
     _animation = Tween<double>(begin: 0, end: 1).animate(_animationController);
   }
@@ -41,7 +41,7 @@ class _FlipContainerState extends State<FlipContainer>
       _animationController.forward();
       _isFrontVisible = !false;
       if (mounted) setState(() {});
-      Timer(const Duration(milliseconds: 60), () {
+      Timer(const Duration(milliseconds: 50), () {
         _animationController.reverse();
         setState(() {
           _isFrontVisible = true;
@@ -65,7 +65,7 @@ class _FlipContainerState extends State<FlipContainer>
           final matrix = Matrix4.identity();
           // Apply horizontal flip effect
           matrix.setEntry(3, 2, 0.002);
-          matrix.rotateY(_animation.value * 3.14);
+          matrix.rotateY(_animation.value * 0.1);
           return Transform(
             transform: matrix,
             alignment: Alignment.center,

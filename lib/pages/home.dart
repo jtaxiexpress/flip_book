@@ -8,6 +8,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:jiffy/jiffy.dart';
 
 import '../custom_widgets/book_card.dart';
+import 'edit_flip_book.dart';
 
 class Home extends StatefulWidget {
   Home({Key? key}) : super(key: key);
@@ -80,9 +81,15 @@ class _HomeState extends State<Home> {
         controller: searchController,
         decoration: InputDecoration(
           hintText: "Search",
+          suffixIcon:searchController.text.isEmpty?null: IconButton(
+              onPressed: () {
+                searchController.clear();
+                if (mounted) setState(() {});
+              },
+              icon: const Icon(Icons.clear)),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-          prefixIcon: const Icon(Icons.search),
+          prefixIcon: const Icon(Icons.search, color: Colors.grey),
           filled: true,
           fillColor: Colors.grey[200],
           border: OutlineInputBorder(
@@ -111,6 +118,16 @@ class _HomeState extends State<Home> {
                 (index) => StaggeredGridTile.fit(
                   crossAxisCellCount: 1,
                   child: FlipBookCard(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                EditFlipBook(flipBook: books[index])),
+                      );
+                      searchController.clear();
+                      if (mounted) setState(() {});
+                    },
                     book: books[index],
                   ),
                 ),
@@ -143,7 +160,7 @@ class _HomeState extends State<Home> {
               child: IconButton(
                 style: IconButton.styleFrom(shape: const CircleBorder()),
                 onPressed: () {
-                  // handle onPressed event here
+                  // ToDO add crown button onPressed
                 },
                 icon: const Icon(
                   FontAwesomeIcons.crown,

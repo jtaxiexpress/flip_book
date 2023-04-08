@@ -1,14 +1,17 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flip_widget/flip_widget.dart';
+import 'package:document_scanner_flutter/configs/configs.dart';
+import 'package:document_scanner_flutter/document_scanner_flutter.dart';
 import 'package:flipbook/custom_widgets/flipped_container.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/pages/preview_flip_book.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 class EditFlipBook extends StatefulWidget {
   const EditFlipBook(
@@ -22,26 +25,21 @@ class EditFlipBook extends StatefulWidget {
 
 class _EditFlipBookState extends State<EditFlipBook> {
   double flipSpeed = 25;
-  final flipKey = GlobalKey<FlipWidgetState>();
-
   var flipBookNameController = TextEditingController();
-
   bool hasFlipAnimation = true;
   final ScrollController scrollController = ScrollController();
-
-  final carouselController = CarouselController();
-  int activeIndex = 0;
-
-  bool isDraggingItem = false;
+  final ImagePicker picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     if (mounted) {
       setState(() {
+        flipBookNameController.text = widget.flipBook.title;
         widget.flipBook.flipSpeed = widget.flipBook.flipSpeed == 25
             ? widget.flipBook.flipSpeed
             : flipSpeed;
+        hasFlipAnimation = widget.flipBook.hasFlipAnimation;
       });
     }
   }
@@ -50,6 +48,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
   void dispose() {
     super.dispose();
     flipBookNameController.dispose();
+    scrollController.dispose();
+    deleteAllFilesFromTempDirectory();
   }
 
   @override
@@ -67,7 +67,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
                 SizedBox(height: size.height * 0.01),
                 buildCameraOptionsRow(),
                 SizedBox(height: size.height * 0.01),
-                buildCarousel(size),
+                buildFlipBookEditWorkSpace(size),
                 buildSwipePreviewBtnsRow(),
                 buildDownloadUploadBtnsRow(size, context),
                 SizedBox(height: size.height * 0.01),
@@ -86,13 +86,14 @@ class _EditFlipBookState extends State<EditFlipBook> {
     );
   }
 
-  SizedBox buildCarousel(ui.Size size) {
+  SizedBox buildFlipBookEditWorkSpace(ui.Size size) {
     return SizedBox(
       width: size.width,
       height: size.height * 0.4,
       child: ReorderableListView.builder(
         scrollDirection: Axis.horizontal,
         scrollController: scrollController,
+        // TODO make it non scrollable if want
         physics: const NeverScrollableScrollPhysics(),
         header: SizedBox(
             width: MediaQuery.of(context).size.width *
@@ -118,49 +119,6 @@ class _EditFlipBookState extends State<EditFlipBook> {
         itemBuilder: (context, index) {
           return buildFlipItem(size, index);
         },
-      ), //buildFlipBookItemsList(size),
-    );
-  }
-
-  Widget buildFlipBookItemsList(ui.Size size) {
-    return Draggable(
-      feedback: const Text('Hello'),
-      child: CarouselSlider.builder(
-        carouselController: carouselController,
-        disableGesture: false,
-        options: CarouselOptions(
-            autoPlay: false,
-            aspectRatio: 1.0,
-            initialPage: activeIndex,
-            enableInfiniteScroll: false,
-            scrollPhysics: const NeverScrollableScrollPhysics(),
-            viewportFraction: 0.7,
-            onPageChanged: (index, reason) {
-              activeIndex = index;
-              if (mounted) setState(() {});
-            }
-            // enlargeCenterPage: true,
-            ),
-        itemCount: widget.flipBook.imageUrls.length > 1
-            ? widget.flipBook.imageUrls.length + 1
-            : widget.flipBook.imageUrls.length,
-        itemBuilder: (context, index, pageIndex) {
-          if (index == widget.flipBook.imageUrls.length) {
-            return Center(
-              key: const Key('Button go to first'),
-              child: IgnorePointer(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    carouselController.animateToPage(0);
-                  },
-                  icon: const Icon(FontAwesomeIcons.arrowsRotate),
-                  label: const Text('go to first'),
-                ),
-              ),
-            );
-          }
-          return buildFlipItem(size, index);
-        },
       ),
     );
   }
@@ -171,7 +129,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
       onHorizontalDragUpdate: hasFlipAnimation
           ? null
           : (dt) {
-              controlScrollOfReorderableListView(dt.delta.dx < 0);
+              controlScrollOfReOrderableListView(dt.delta.dx < 0);
             },
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: size.width * 0.06),
@@ -180,7 +138,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
           height: size.height * 0.4,
           child: hasFlipAnimation
               ? FlipContainer(
-                  onSwipe: controlScrollOfReorderableListView,
+                  onSwipe: controlScrollOfReOrderableListView,
                   child: buildFlipCard(index),
                 )
               : buildFlipCard(index),
@@ -194,7 +152,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
       color: Colors.white,
       elevation: 3,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-      child: widget.isFromNewFlipPage
+      child: widget.flipBook.imageUrls[index].contains("/0/")
           ? Image.file(
               File(widget.flipBook.imageUrls[index]),
             )
@@ -213,7 +171,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
         FloatingActionButton(
           heroTag: const ValueKey("images"),
           backgroundColor: Colors.black,
-          onPressed: () {},
+          onPressed: onImagesFromGalleryBtnPressed,
           mini: true,
           child: const Icon(
             FontAwesomeIcons.images,
@@ -224,7 +182,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
         FloatingActionButton(
           heroTag: const ValueKey("scanner"),
           backgroundColor: Colors.black,
-          onPressed: () {},
+          onPressed: onImagesFromScannerBtnPressed,
           mini: true,
           child: const Icon(
             Icons.document_scanner_outlined,
@@ -235,7 +193,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
         FloatingActionButton(
           heroTag: const ValueKey("camera"),
           backgroundColor: Colors.black,
-          onPressed: () {},
+          onPressed: onImagesFromCameraBtnPressed,
           mini: true,
           child: const Icon(
             Icons.camera_alt,
@@ -446,13 +404,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
       height: MediaQuery.of(context).size.height * 0.09,
       child: TextField(
         controller: flipBookNameController,
-        onSubmitted: (val) {
-          if (mounted) {
-            setState(() {
-              flipBookNameController.text = val;
-            });
-          }
-        },
+        onSubmitted: onFlipBookTitleChanged,
+        onChanged: onFlipBookTitleChanged,
         maxLength: 30,
         keyboardType: TextInputType.name,
         decoration: InputDecoration(
@@ -488,20 +441,82 @@ class _EditFlipBookState extends State<EditFlipBook> {
     }
   }
 
-  void controlScrollOfReorderableListView(bool isLeftSwipe) {
+  void controlScrollOfReOrderableListView(bool isLeftSwipe) {
     if (isLeftSwipe) {
       //left swipe
       scrollController.animateTo(
           scrollController.offset + MediaQuery.of(context).size.width * 0.67,
           duration: Duration(milliseconds: flipSpeed.toInt()),
           curve: Curves.easeInOut);
-      print("Left swipe");
     } else {
       scrollController.animateTo(
           scrollController.offset - MediaQuery.of(context).size.width * 0.67,
           duration: Duration(milliseconds: flipSpeed.toInt()),
           curve: Curves.easeInOut);
-      print('Right swipe');
     }
   }
+
+  Future<void> deleteAllFilesFromTempDirectory() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final files = await directory.list().toList();
+
+    for (final file in files) {
+      if (file is File) {
+        await file.delete();
+      }
+    }
+    print('Flushed the temp dir successfully.');
+  }
+
+  void onImagesFromGalleryBtnPressed() async {
+    final List<XFile> images = await picker.pickMultiImage();
+    images.forEach((element) {
+      widget.flipBook.imageUrls.add(element.path);
+    });
+    if (mounted) setState(() {});
+  }
+
+  void onImagesFromScannerBtnPressed() async {
+    try {
+      final scannedImg = await DocumentScannerFlutter.launch(
+        context,
+        source: ScannerFileSource.CAMERA,
+      ); // Or ScannerFileSource.GALLERY
+      if (scannedImg == null) return;
+      widget.flipBook.imageUrls.add(scannedImg.path);
+    } on PlatformException {
+      // 'Failed to get document path or operation cancelled!';
+      print("Platform exception");
+    }
+    if (mounted) setState(() {});
+  }
+
+  void onImagesFromCameraBtnPressed() async {
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+    print(image?.path);
+    // final imagePath = '${directory.path}/${images[i].name}';
+    if (image == null) return;
+    widget.flipBook.imageUrls.add(image.path);
+
+    if (mounted) setState(() {});
+    // print(imagesPaths);
+  }
+
+  void onFlipBookTitleChanged(String val) {
+    if (mounted) {
+      setState(() {
+        widget.flipBook.title = capitalizeText(val);
+      });
+    }
+  }
+}
+
+String capitalizeText(String text) {
+  List<String> words = text.split(' ');
+  for (int i = 0; i < words.length; i++) {
+    if (words[i].isNotEmpty) {
+      words[i] = '${words[i][0].toUpperCase()}${words[i].substring(1)}';
+    }
+  }
+  return words.join(' ');
 }
