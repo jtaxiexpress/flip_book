@@ -41,11 +41,14 @@ class _FlipContainerState extends State<FlipContainer>
       _animationController.forward();
       _isFrontVisible = !false;
       if (mounted) setState(() {});
-      Timer(const Duration(milliseconds: 50), () {
-        _animationController.reverse();
-        setState(() {
-          _isFrontVisible = true;
-        });
+      Timer(const Duration(milliseconds: 60), () {
+        if (mounted) {
+          _animationController.reverse();
+          setState(() {
+            _isFrontVisible = true;
+          });
+        }
+
         widget.onSwipe(true);
       });
     } else {

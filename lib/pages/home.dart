@@ -5,9 +5,10 @@ import 'package:flipbook/pages/new_flip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:jiffy/jiffy.dart';
+import 'package:provider/provider.dart';
 
 import '../custom_widgets/book_card.dart';
+import '../state_management/flipbook_provider.dart';
 import 'edit_flip_book.dart';
 
 class Home extends StatefulWidget {
@@ -19,21 +20,21 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final searchController = TextEditingController();
-  static final List<FlipBook> initialBooks = List.generate(
-      10,
-      (index) => FlipBook(
-            title: generateRandomWord(),
-            creationDate: Jiffy.parseFromDateTime(DateTime.now())
-                .format(pattern: "yyyy/MM/dd hh:mm"),
-            imageUrls: List.generate(8, (i) => "assets/images/${i + 1}.png"),
-          ));
-  List<FlipBook> books = initialBooks;
+  List<FlipBook> initialBooks = [];
+  List<FlipBook> books = [];
+
+  var isLoadingBooks = false;
   @override
   void initState() {
     super.initState();
     searchController.addListener(() {
       filterBooks();
       if (mounted) setState(() {});
+    });
+    Future.delayed(const Duration(milliseconds: 10)).then((value) {
+      context.read<FlipBookProvider>().loadApplicationDir();
+      loadBooks();
+      // context.read<FlipBookProvider>().deleteDb();
     });
   }
 
@@ -50,18 +51,28 @@ class _HomeState extends State<Home> {
               buildHeader(context),
               SizedBox(height: size.height * 0.01),
               buildSearchField(),
-              buildBody(),
+              isLoadingBooks
+                  ? Container(
+                      margin: EdgeInsets.only(
+                          top: MediaQuery.of(context).size.height * 0.3),
+                      child: const Center(child: CircularProgressIndicator()))
+                  : buildBody(),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: const ValueKey("edit"),
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const NewFlip()),
+            MaterialPageRoute(
+              builder: (context) => NewFlip(
+                onFlipCreate: loadBooks,
+              ),
+            ),
           );
+          loadBooks();
         },
         child: const Icon(Icons.edit),
       ),
@@ -81,12 +92,14 @@ class _HomeState extends State<Home> {
         controller: searchController,
         decoration: InputDecoration(
           hintText: "Search",
-          suffixIcon:searchController.text.isEmpty?null: IconButton(
-              onPressed: () {
-                searchController.clear();
-                if (mounted) setState(() {});
-              },
-              icon: const Icon(Icons.clear)),
+          suffixIcon: searchController.text.isEmpty
+              ? null
+              : IconButton(
+                  onPressed: () {
+                    searchController.clear();
+                    if (mounted) setState(() {});
+                  },
+                  icon: const Icon(Icons.clear)),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
           prefixIcon: const Icon(Icons.search, color: Colors.grey),
@@ -101,6 +114,24 @@ class _HomeState extends State<Home> {
     );
   }
 
+  void loadBooks() async {
+    if (mounted) {
+      setState(() {
+        isLoadingBooks = true;
+      });
+    }
+    print('Reloading...');
+    await context.read<FlipBookProvider>().loadAllBooks();
+    initialBooks = context.read<FlipBookProvider>().books;
+    books = initialBooks;
+    if (mounted) {
+      setState(() {
+        isLoadingBooks = false;
+      });
+    }
+    print('reloaded');
+  }
+
   Expanded buildBody() {
     final size = MediaQuery.of(context).size;
     return Expanded(
@@ -108,31 +139,45 @@ class _HomeState extends State<Home> {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: StaggeredGrid.count(
-              axisDirection: AxisDirection.down,
-              crossAxisCount: 2,
-              mainAxisSpacing: size.height * 0.01,
-              crossAxisSpacing: size.width * 0.02,
-              children: List.generate(
-                books.length,
-                (index) => StaggeredGridTile.fit(
-                  crossAxisCellCount: 1,
-                  child: FlipBookCard(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                EditFlipBook(flipBook: books[index])),
-                      );
-                      searchController.clear();
-                      if (mounted) setState(() {});
-                    },
-                    book: books[index],
+            child: books.isEmpty
+                ? SizedBox(
+                    height: size.height * 0.6,
+                    child: Center(
+                      child: Text(
+                        capitalizeText('No flipbooks for now.'),
+                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                      ),
+                    ),
+                  )
+                : StaggeredGrid.count(
+                    axisDirection: AxisDirection.down,
+                    crossAxisCount: 2,
+                    mainAxisSpacing: size.height * 0.01,
+                    crossAxisSpacing: size.width * 0.02,
+                    children: List.generate(
+                      books.length,
+                      (index) => StaggeredGridTile.fit(
+                        crossAxisCellCount: 1,
+                        child: FlipBookCard(
+                          onDeleted: () {
+                            loadBooks();
+                          },
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      EditFlipBook(flipBook: books[index])),
+                            );
+                            loadBooks();
+                            searchController.clear();
+                            if (mounted) setState(() {});
+                          },
+                          book: books[index],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
           ),
         ],
       ),

@@ -1,6 +1,8 @@
 import 'package:flipbook/pages/home.dart';
+import 'package:flipbook/state_management/flipbook_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +13,12 @@ void main() {
     statusBarColor: Colors.white,
     statusBarIconBrightness: Brightness.dark,
   ));
-  runApp(const FlipBookApp());
+  runApp(
+    ChangeNotifierProvider<FlipBookProvider>(
+      create: (_) => FlipBookProvider(),
+      child: const FlipBookApp(),
+    ),
+  );
 }
 
 class FlipBookApp extends StatelessWidget {

@@ -4,17 +4,18 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:document_scanner_flutter/configs/configs.dart';
 import 'package:document_scanner_flutter/document_scanner_flutter.dart';
 import 'package:flipbook/model/flip_book.dart';
+import 'package:flipbook/state_management/flipbook_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 
 import 'edit_flip_book.dart';
 
 class NewFlip extends StatefulWidget {
-  const NewFlip({Key? key}) : super(key: key);
-
+  const NewFlip({Key? key, required this.onFlipCreate}) : super(key: key);
+  final VoidCallback onFlipCreate;
   @override
   State<NewFlip> createState() => _NewFlipState();
 }
@@ -23,6 +24,17 @@ class _NewFlipState extends State<NewFlip> {
   final flipBookNameController = TextEditingController();
   final ImagePicker picker = ImagePicker();
   List<String> imagesPaths = [];
+  String? id;
+  Directory? flipDirectory;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Future.delayed(Duration(milliseconds: 20)).then((value) {
+      id = context.read<FlipBookProvider>().generateUniqueId();
+      createFlipImagesDirectory(id!);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -148,6 +160,7 @@ class _NewFlipState extends State<NewFlip> {
   void dispose() {
     super.dispose();
     flipBookNameController.dispose();
+    deleteFlipDirectoryIfEmpty();
   }
 
   Widget buildBookNameField() {
@@ -181,35 +194,32 @@ class _NewFlipState extends State<NewFlip> {
 
   void onImagesFromGalleryBtnPressed() async {
     final List<XFile> images = await picker.pickMultiImage();
-    final dir = await getApplicationDocumentsDirectory();
+    if (images.isEmpty) return;
     int index = 1;
     final extension =
         images.first.path.substring(images.first.path.lastIndexOf('.') + 1);
     images.forEach((e) {
-      final fileName =
-          "${dir.path}/image_${index.toString().padLeft(3, '0')}.$extension";
-      e.saveTo(fileName).then((value) => debugPrint("Saved"));
+      final filePath =
+          "${flipDirectory!.path}/image_${index.toString().padLeft(3, '0')}.$extension";
+      e.saveTo(filePath).then((value) => debugPrint("Saved"));
       index++;
-      imagesPaths.add(fileName);
+      imagesPaths.add(filePath);
     });
     print(imagesPaths);
-    // print(images.length);
-    // images.forEach((element) {
-    //   imagesPaths.add(element.path);
-    // });
+
     if (imagesPaths.isNotEmpty) {
       if (imagesPaths.length >= 6) {
         //TODO
         // show Ad
       }
-      // imagesPaths = await saveToGallery(imagesPaths);
       print("new paths: $imagesPaths");
       FlipBook flipBook = FlipBook(
+          id: id!,
+          imagesDirPath: flipDirectory!.path,
           title: flipBookNameController.text,
           creationDate: DateTime.now().toIso8601String(),
           imageUrls: imagesPaths);
       //TODO push to edit screen
-      await Future.delayed(const Duration(milliseconds: 10));
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -225,53 +235,22 @@ class _NewFlipState extends State<NewFlip> {
 
   void onImagesFromScannerBtnPressed() async {
     try {
-      final scannedImg = await DocumentScannerFlutter.launch(
+      final image = await DocumentScannerFlutter.launch(
         context,
         source: ScannerFileSource.CAMERA,
       ); // Or ScannerFileSource.GALLERY
-      if (scannedImg == null) return;
-      imagesPaths.add(scannedImg.path);
-      if (imagesPaths.isNotEmpty) {
-        if (imagesPaths.length >= 6) {
-          //TODO
-          // show Ad
-        }
-        FlipBook flipBook = FlipBook(
-            title: flipBookNameController.text,
-            creationDate: DateTime.now().toIso8601String(),
-            imageUrls: imagesPaths);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EditFlipBook(
-              flipBook: flipBook,
-              isFromNewFlipPage: true,
-            ),
-          ),
-        );
-      }
-    } on PlatformException {
-      // 'Failed to get document path or operation cancelled!';
-      print("Platform exception");
-    }
-    if (mounted) setState(() {});
-  }
+      if (image == null) return;
+      final saveImageToPath =
+          "${flipDirectory!.path}/image_001${image.path.substring(image.path.lastIndexOf("."))}";
+      await image.copy(saveImageToPath);
+      print("Image saved to path: $saveImageToPath");
 
-  void onImagesFromCameraBtnPressed() async {
-    final XFile? image = await picker.pickImage(source: ImageSource.camera);
-    print(image?.path);
-    // final imagePath = '${directory.path}/${images[i].name}';
-    if (image == null) return;
-    imagesPaths.add(image.path);
-    if (imagesPaths.isNotEmpty) {
-      if (imagesPaths.length >= 6) {
-        //TODO
-        // show Ad
-      }
       FlipBook flipBook = FlipBook(
+          id: id!,
+          imagesDirPath: flipDirectory!.path,
           title: flipBookNameController.text,
           creationDate: DateTime.now().toIso8601String(),
-          imageUrls: imagesPaths);
+          imageUrls: [saveImageToPath]);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -281,20 +260,64 @@ class _NewFlipState extends State<NewFlip> {
           ),
         ),
       );
+    } on PlatformException {
+      // 'Failed to get document path or operation cancelled!';
+      print("Platform exception");
     }
     if (mounted) setState(() {});
-    // print(imagesPaths);
+  }
+
+  void onImagesFromCameraBtnPressed() async {
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+    if (image == null) return;
+    final saveImageToPath =
+        "${flipDirectory!.path}/image_001${image.name.substring(image.name.lastIndexOf("."))}";
+    await image.saveTo(saveImageToPath);
+    print("Image saved to path: $saveImageToPath");
+
+    FlipBook flipBook = FlipBook(
+        id: id!,
+        imagesDirPath: flipDirectory!.path,
+        title: flipBookNameController.text,
+        creationDate: DateTime.now().toIso8601String(),
+        imageUrls: [saveImageToPath]);
+    await Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditFlipBook(
+          flipBook: flipBook,
+          isFromNewFlipPage: true,
+          onCreate: widget.onFlipCreate,
+        ),
+      ),
+    );
+    widget.onFlipCreate();
+    if (mounted) setState(() {});
+  }
+
+  createFlipImagesDirectory(String id) async {
+    final appDir = context.read<FlipBookProvider>().applicationDir;
+    final myDir = Directory("${appDir.path}/$id");
+    final dir = await myDir.create();
+    if (mounted) {
+      setState(() {
+        flipDirectory = dir;
+      });
+    }
+    print('Directory created: ${dir.path}');
+  }
+
+  deleteFlipDirectoryIfEmpty() async {
+    final list = flipDirectory!.listSync();
+    print('List length: ${list.length}');
+    if (list.isEmpty) {
+      await flipDirectory!.delete(recursive: true);
+    }
+    if (!(await flipDirectory!.exists())) {
+      print('Directory deleted: ${flipDirectory?.path}');
+    }
   }
 }
 
 // TODO u can move count digits
 // length is 3 then the counts digit will be two so we will add two digit number left padded with 0
-
-int countDigits(int number) {
-  int count = 0;
-  while (number != 0) {
-    count++;
-    number ~/= 10;
-  }
-  return count + 1;
-}

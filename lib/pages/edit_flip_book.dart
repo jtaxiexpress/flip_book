@@ -6,29 +6,39 @@ import 'package:document_scanner_flutter/document_scanner_flutter.dart';
 import 'package:flipbook/custom_widgets/flipped_container.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/pages/preview_flip_book.dart';
+import 'package:flipbook/state_management/flipbook_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+
+import '../utilities/video_creator.dart';
 
 class EditFlipBook extends StatefulWidget {
   const EditFlipBook(
-      {Key? key, required this.flipBook, this.isFromNewFlipPage = false})
+      {Key? key,
+      required this.flipBook,
+      this.isFromNewFlipPage = false,
+      this.onCreate})
       : super(key: key);
   final FlipBook flipBook;
+  final VoidCallback? onCreate;
   final bool isFromNewFlipPage;
   @override
   State<EditFlipBook> createState() => _EditFlipBookState();
 }
 
 class _EditFlipBookState extends State<EditFlipBook> {
-  double flipSpeed = 25;
+  double flipSpeed = 6;
   var flipBookNameController = TextEditingController();
   bool hasFlipAnimation = true;
   final ScrollController scrollController = ScrollController();
   final ImagePicker picker = ImagePicker();
+  bool alreadyInsertedInDb = false;
+  List<String> list = [];
+  bool isReordering = false;
 
   @override
   void initState() {
@@ -36,20 +46,29 @@ class _EditFlipBookState extends State<EditFlipBook> {
     if (mounted) {
       setState(() {
         flipBookNameController.text = widget.flipBook.title;
-        widget.flipBook.flipSpeed = widget.flipBook.flipSpeed == 25
-            ? widget.flipBook.flipSpeed
-            : flipSpeed;
         hasFlipAnimation = widget.flipBook.hasFlipAnimation;
+        list = List.from(widget.flipBook.imageUrls);
       });
     }
+    Future.delayed(Duration(milliseconds: 5)).then((value) async {
+      alreadyInsertedInDb = await context
+          .read<FlipBookProvider>()
+          .flipBookExists(widget.flipBook);
+      print('Flip book exits: $alreadyInsertedInDb');
+    });
   }
 
   @override
   void dispose() {
     super.dispose();
+    if (widget.flipBook.imageUrls.isEmpty) {
+      deleteAllFilesFromFlipBookDirectory();
+    }
     flipBookNameController.dispose();
     scrollController.dispose();
-    deleteAllFilesFromTempDirectory();
+    if (widget.isFromNewFlipPage) {
+      widget.onCreate?.call();
+    }
   }
 
   @override
@@ -94,7 +113,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
         scrollDirection: Axis.horizontal,
         scrollController: scrollController,
         // TODO make it non scrollable if want
-        physics: const NeverScrollableScrollPhysics(),
+        // physics: isReordering ? null :const NeverScrollableScrollPhysics(),
         header: SizedBox(
             width: MediaQuery.of(context).size.width *
                 (widget.flipBook.imageUrls.length == 1
@@ -105,17 +124,50 @@ class _EditFlipBookState extends State<EditFlipBook> {
                 (widget.flipBook.imageUrls.length == 1
                     ? 0.18
                     : 0.15)), // scrollCon// troller: scrollController,
-        onReorder: (oldIndex, newIndex) {
-          setState(() {
-            if (newIndex > oldIndex) {
-              newIndex -= 1;
-            }
-            final item = widget.flipBook.imageUrls.removeAt(oldIndex);
-            widget.flipBook.imageUrls.insert(newIndex, item);
-          });
+        onReorderStart: (val) {
+          isReordering = true;
+          setState(() {});
+        },
+        onReorderEnd: (val) {
+          isReordering = false;
+          setState(() {});
+        },
+        onReorder: (oldIndex, newIndex) async {
+          if (newIndex > oldIndex) {
+            newIndex -= 1;
+          }
+          String firstFilePath = list[oldIndex]; //002.png
+          String secondFilePath = list[newIndex]; //001.png
+
+          // final file = File(firstFileName);
+          // final extension = file.path.substring(file.path.lastIndexOf("."));
+          // String random =
+          //     "${widget.flipBook.imagesDirPath!}/random$extension"; //random.png
+          // final file2 = await file.copy(random); //002->random.png
+          // await File(secondFileName).rename(firstFileName);
+          // await file2
+          //     .copy(secondFileName)
+          //     .then((value) => debugPrint("renamed second file"));
+          // file2.delete();
+
+          print("Before");
+          // print(widget.flipBook.imageUrls);
+          // widget.flipBook.imageUrls[oldIndex] = secondFilePath;
+          // widget.flipBook.imageUrls[newIndex] = firstFilePath;
+          print(list);
+          swapFileNames(firstFilePath, secondFilePath);
+          // // // update in database
+          print("After");
+          list[newIndex] = firstFilePath;
+          list[oldIndex] = secondFilePath;
+          // print(widget.flipBook.imageUrls);
+          // if (alreadyInsertedInDb) {
+          //   context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
+          // }
+          setState(() {});
         },
 
-        itemCount: widget.flipBook.imageUrls.length,
+        itemCount: list.length,
         itemBuilder: (context, index) {
           return buildFlipItem(size, index);
         },
@@ -152,16 +204,28 @@ class _EditFlipBookState extends State<EditFlipBook> {
       color: Colors.white,
       elevation: 3,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-      child: widget.flipBook.imageUrls[index].contains("/0/")
+      child: list[index].contains("/0/")
           ? Image.file(
-              File(widget.flipBook.imageUrls[index]),
+              File(list[index]),
             )
           //TODO
           // make it network
           : Image.asset(
-              widget.flipBook.imageUrls[index],
+              list[index],
             ),
     );
+  }
+
+  void swapFileNames(String pathA, String pathB) {
+    final fileA = File(pathA);
+    final fileB = File(pathB);
+
+    if (fileA.existsSync() && fileB.existsSync()) {
+      final tempFile = fileA.renameSync('${fileA.path}.temp');
+      fileB.renameSync(fileA.path);
+      tempFile.renameSync(fileB.path);
+      print('swap successful');
+    }
   }
 
   Row buildCameraOptionsRow() {
@@ -265,9 +329,13 @@ class _EditFlipBookState extends State<EditFlipBook> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) =>
-                        PreviewFlipBook(flipBook: widget.flipBook)),
+                  builder: (context) => PreviewFlipBook(
+                    flipBook: widget.flipBook,
+                    flipSpeed: flipSpeed,
+                  ),
+                ),
               );
+              // print(context.read<FlipBookProvider>().initialBooks);
             },
             child: Text(
               'Preview',
@@ -295,7 +363,33 @@ class _EditFlipBookState extends State<EditFlipBook> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
             ),
-            onPressed: () {},
+            onPressed: () async {
+              String title = widget.flipBook.title.trim().isNotEmpty
+                  ? '"${widget.flipBook.title}"'
+                  : DateTime.now().millisecondsSinceEpoch.toString();
+              title = title
+                  .replaceAll(RegExp(r'[^\w\s]+'), '')
+                  .replaceAll(RegExp(r'\s+'), '');
+              final outputFile = "/storage/emulated/0/DCIM/Camera/$title.mp4";
+              final vc = VideoCreator();
+              vc.createVideo(
+                  widget.flipBook.imageUrls,
+                  widget.flipBook.imagesDirPath!,
+                  outputFile,
+                  14 - flipSpeed.toInt());
+              if (alreadyInsertedInDb) {
+                context
+                    .read<FlipBookProvider>()
+                    .updateFlipBook(widget.flipBook);
+              } else {
+                context
+                    .read<FlipBookProvider>()
+                    .createFlipBook(widget.flipBook);
+                setState(() {
+                  alreadyInsertedInDb = true;
+                });
+              }
+            },
             child: const Text('Download'),
           ),
         ),
@@ -340,8 +434,9 @@ class _EditFlipBookState extends State<EditFlipBook> {
                           height: size.height * 0.05,
                           child: CupertinoSlider(
                             value: flipSpeed,
-                            min: 20,
-                            max: 50,
+                            min: 2,
+                            max: 12,
+                            // divisions: 24,
                             onChanged: onFlipSpeedChanged,
                           ),
                         )
@@ -350,9 +445,10 @@ class _EditFlipBookState extends State<EditFlipBook> {
                           child: Slider(
                             value: flipSpeed,
                             onChanged: onFlipSpeedChanged,
-                            label: flipSpeed.toStringAsFixed(2),
-                            min: 20,
-                            max: 50,
+                            // divisions: 24,
+                            label: flipSpeed.toInt().toString(),
+                            min: 2,
+                            max: 12,
                           ),
                         ),
                 ],
@@ -404,7 +500,10 @@ class _EditFlipBookState extends State<EditFlipBook> {
       height: MediaQuery.of(context).size.height * 0.09,
       child: TextField(
         controller: flipBookNameController,
-        onSubmitted: onFlipBookTitleChanged,
+        onSubmitted: (val) {
+          onFlipBookTitleChanged(val);
+          context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
+        },
         onChanged: onFlipBookTitleChanged,
         maxLength: 30,
         keyboardType: TextInputType.name,
@@ -436,58 +535,84 @@ class _EditFlipBookState extends State<EditFlipBook> {
     if (mounted) {
       setState(() {
         flipSpeed = value;
-        widget.flipBook.flipSpeed = flipSpeed;
       });
     }
   }
 
-  void controlScrollOfReOrderableListView(bool isLeftSwipe) {
+  void controlScrollOfReOrderableListView(bool isLeftSwipe) async {
     if (isLeftSwipe) {
       //left swipe
+      await Future.delayed(Duration(milliseconds: flipSpeed.toInt()));
       scrollController.animateTo(
           scrollController.offset + MediaQuery.of(context).size.width * 0.67,
-          duration: Duration(milliseconds: flipSpeed.toInt()),
-          curve: Curves.easeInOut);
+          duration: Duration(milliseconds: 1),
+          curve: Curves.fastLinearToSlowEaseIn);
     } else {
       scrollController.animateTo(
           scrollController.offset - MediaQuery.of(context).size.width * 0.67,
-          duration: Duration(milliseconds: flipSpeed.toInt()),
-          curve: Curves.easeInOut);
+          duration: Duration(milliseconds: 1),
+          curve: Curves.linear);
     }
   }
 
-  Future<void> deleteAllFilesFromTempDirectory() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final files = await directory.list().toList();
-
-    for (final file in files) {
-      if (file is File) {
-        await file.delete();
+  Future<void> deleteAllFilesFromFlipBookDirectory() async {
+    final myDir = Directory(widget.flipBook.imagesDirPath!);
+    if (await myDir.exists()) {
+      final files = await myDir.list().toList();
+      for (final file in files) {
+        if (file is File) {
+          await file.delete();
+        }
       }
     }
-    print('Flushed the temp dir successfully.');
+    print('Flushed the images(${myDir.path}) dir successfully.');
   }
 
   void onImagesFromGalleryBtnPressed() async {
     final List<XFile> images = await picker.pickMultiImage();
-    images.forEach((element) {
-      widget.flipBook.imageUrls.add(element.path);
+    int before = widget.flipBook.imageUrls.length;
+    images.forEach((image) async {
+      widget.flipBook.imageUrls.add(image.path);
     });
+    int afterLength = widget.flipBook.imageUrls.length;
+    if (afterLength > before) {
+      int index = before + 1;
+      images.forEach((image) async {
+        final saveImageToPath = generatePathForNewImage(index, image.name);
+        widget.flipBook.imageUrls[index - 1] = saveImageToPath;
+        index++;
+        await image.saveTo(saveImageToPath);
+        print("Image saved to path: $saveImageToPath");
+      });
+    }
+    if (list.length < widget.flipBook.imageUrls.length) {
+      widget.flipBook.imageUrls.forEach((element) {
+        if (!list.contains(element)) list.add(element);
+      });
+    }
+    context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
+
     if (mounted) setState(() {});
   }
 
   void onImagesFromScannerBtnPressed() async {
     try {
-      final scannedImg = await DocumentScannerFlutter.launch(
+      final image = await DocumentScannerFlutter.launch(
         context,
         source: ScannerFileSource.CAMERA,
       ); // Or ScannerFileSource.GALLERY
-      if (scannedImg == null) return;
-      widget.flipBook.imageUrls.add(scannedImg.path);
+      if (image == null) return;
+      final saveImageToPath = generatePathForNewImage(
+          widget.flipBook.imageUrls.length + 1, image.path);
+      await image.copy(saveImageToPath);
+      print("Image saved to path: $saveImageToPath");
+      widget.flipBook.imageUrls.add(saveImageToPath);
+      list.add(image.path);
     } on PlatformException {
       // 'Failed to get document path or operation cancelled!';
       print("Platform exception");
     }
+    context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
     if (mounted) setState(() {});
   }
 
@@ -496,10 +621,21 @@ class _EditFlipBookState extends State<EditFlipBook> {
     print(image?.path);
     // final imagePath = '${directory.path}/${images[i].name}';
     if (image == null) return;
-    widget.flipBook.imageUrls.add(image.path);
-
+    final saveImageToPath = generatePathForNewImage(
+        widget.flipBook.imageUrls.length + 1, image.path);
+    await image.saveTo(saveImageToPath);
+    print("Image saved to path: $saveImageToPath");
+    widget.flipBook.imageUrls.add(saveImageToPath);
+    list.add(image.path);
+    context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
     if (mounted) setState(() {});
+
     // print(imagesPaths);
+  }
+
+  generatePathForNewImage(int imageNumber, String imageName) {
+    final dir = widget.flipBook.imagesDirPath;
+    return "$dir/image_${imageNumber.toString().padLeft(3, "0")}${imageName.substring(imageName.lastIndexOf("."))}";
   }
 
   void onFlipBookTitleChanged(String val) {

@@ -1,23 +1,32 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flipbook/pages/edit_flip_book.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:jiffy/jiffy.dart';
+import 'package:provider/provider.dart';
 
 import '../model/flip_book.dart';
+import '../state_management/flipbook_provider.dart';
 
 class FlipBookCard extends StatelessWidget {
   final FlipBook book;
 
   final VoidCallback onPressed;
+  final VoidCallback onDeleted;
 
-  const FlipBookCard({Key? key, required this.book, required this.onPressed})
+  const FlipBookCard(
+      {Key? key,
+      required this.book,
+      required this.onPressed,
+      required this.onDeleted})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    Image image = Image.asset(book.imageUrls[0]);
+    Image image = Image.file(File(book.imageUrls[0]));
     Completer<ui.Image> completer = Completer<ui.Image>();
     image.image.resolve(const ImageConfiguration()).addListener(
         ImageStreamListener((ImageInfo info, bool synchronousCall) {
@@ -28,7 +37,8 @@ class FlipBookCard extends StatelessWidget {
       onLongPress: () async {
         bool? confirmed = await showDeleteConfirmationDialog(context);
         if (confirmed == true) {
-          print('deleted');
+          context.read<FlipBookProvider>().deleteFlipBook(book);
+          onDeleted();
         } else {
           print('not deleted');
         }
@@ -50,22 +60,25 @@ class FlipBookCard extends StatelessWidget {
                         child: Container(
                           height: getHeight(
                               context, snapshot.data!.height.toDouble()),
+                          width: getWidth(
+                              context, snapshot.data!.width.toDouble()),
                           // 100 + Random().nextDouble() * (300 - 100)),
                           decoration: BoxDecoration(
                             image: DecorationImage(
-                                image: AssetImage(book.imageUrls[0]),
-                                fit: BoxFit.contain),
+                              image: FileImage(File(book.imageUrls[0])),
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                       )
-                    : const Text('Loading...');
+                    : const Center(child: Text('Loading...'));
               },
             ),
             SizedBox(height: MediaQuery.of(context).size.height * 0.002),
             Padding(
               padding: const EdgeInsets.all(5.0),
               child: Text(
-                book.title,
+                book.title.isNotEmpty ? book.title : "empty",
                 textAlign: TextAlign.end,
                 style: const TextStyle(
                   fontWeight: FontWeight.w500,
@@ -75,11 +88,12 @@ class FlipBookCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 5.0),
               child: Text(
-                book.creationDate,
+                Jiffy.parse(book.creationDate)
+                    .format(pattern: "yyyy/MM/dd hh:mm"),
                 textAlign: TextAlign.end,
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.grey.shade400,
+                  color: Colors.grey.shade500,
                 ),
               ),
             ),
@@ -147,8 +161,17 @@ class FlipBookCard extends StatelessWidget {
 
   double getHeight(context, double height) {
     double h = height;
+    // print(h);
     final size = MediaQuery.of(context).size;
-    if (h > size.height * 0.2) return h / 2;
-    return h;
+    if (h < size.height * 0.3) return h;
+    return size.height * 0.3;
+  }
+
+  double getWidth(context, double width) {
+    double w = width;
+    // print(w);
+    final size = MediaQuery.of(context).size;
+    if (w < size.width * 0.45) return w;
+    return size.width * 0.45;
   }
 }

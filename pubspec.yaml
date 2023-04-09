@@ -55,6 +55,8 @@ dependencies:
   image_sequence_animator: ^2.0.0
   spring_button: ^2.0.0
   fluttertoast: ^8.2.1
+  provider: ^6.0.5
+  media_scanner: ^2.1.0
 
 dev_dependencies:
   flutter_test:
