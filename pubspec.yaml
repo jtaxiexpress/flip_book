@@ -49,6 +49,7 @@ dependencies:
   media_scanner: ^2.1.0
   share_plus: ^4.5.3
   sqflite: ^2.2.6
+  admob_flutter: ^3.0.0
 
 dev_dependencies:
   flutter_test:

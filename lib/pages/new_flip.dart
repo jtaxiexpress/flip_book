@@ -32,6 +32,9 @@ class _NewFlipState extends State<NewFlip> {
     super.initState();
     Future.delayed(Duration(milliseconds: 20)).then((value) {
       id = context.read<FlipBookProvider>().generateUniqueId();
+      context
+          .read<FlipBookProvider>()
+          .loadBannerAd(MediaQuery.of(context).size.width.toInt());
       createFlipImagesDirectory(id!);
     });
   }
@@ -39,6 +42,8 @@ class _NewFlipState extends State<NewFlip> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final model = context.read<FlipBookProvider>();
+
     return Scaffold(
       body: SingleChildScrollView(
         child: SafeArea(
@@ -148,11 +153,9 @@ class _NewFlipState extends State<NewFlip> {
           ),
         ),
       ),
-      bottomNavigationBar: Container(
-        color: Colors.grey.shade300,
-        height: size.height * 0.1,
-        child: const Center(child: Text('banner Ad')),
-      ),
+      bottomNavigationBar: model.bannerSize != null
+          ? model.bannerWidget()
+          : model.bannerPlaceHolder(MediaQuery.of(context).size),
     );
   }
 
@@ -245,6 +248,9 @@ class _NewFlipState extends State<NewFlip> {
           "${flipDirectory!.path}/image_001${image.path.substring(image.path.lastIndexOf("."))}";
       await image.copy(saveImageToPath);
       print("Image saved to path: $saveImageToPath");
+      context
+          .read<FlipBookProvider>()
+          .incrementCameraScannerCameraUploadCount();
 
       FlipBook flipBook = FlipBook(
           id: id!,
@@ -276,6 +282,7 @@ class _NewFlipState extends State<NewFlip> {
         "${flipDirectory!.path}/image_001${image.name.substring(image.name.lastIndexOf("."))}";
     await image.saveTo(saveImageToPath);
     print("Image saved to path: $saveImageToPath");
+    context.read<FlipBookProvider>().incrementCameraScannerCameraUploadCount();
 
     FlipBook flipBook = FlipBook(
         id: id!,

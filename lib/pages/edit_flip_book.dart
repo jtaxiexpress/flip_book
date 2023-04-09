@@ -49,13 +49,14 @@ class _EditFlipBookState extends State<EditFlipBook> {
         list = List.from(widget.flipBook.imageUrls);
       });
     }
-    Future.delayed(Duration(milliseconds: 5)).then((value) async {
-      alreadyInsertedInDb = await context
-          .read<FlipBookProvider>()
-          .flipBookExists(widget.flipBook);
+    Future.delayed(Duration(milliseconds: 2)).then((value) async {
+      final model = context.read<FlipBookProvider>();
+
+      model.loadBannerAd(MediaQuery.of(context).size.width.toInt());
+      alreadyInsertedInDb = await model.flipBookExists(widget.flipBook);
       print('Flip book exits: $alreadyInsertedInDb');
       if (!alreadyInsertedInDb) {
-        await context.read<FlipBookProvider>().createFlipBook(widget.flipBook);
+        await model.createFlipBook(widget.flipBook);
         setState(() {
           alreadyInsertedInDb = true;
         });
@@ -80,6 +81,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final model = context.read<FlipBookProvider>();
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -103,11 +105,9 @@ class _EditFlipBookState extends State<EditFlipBook> {
           ),
         ),
       ),
-      bottomNavigationBar: Container(
-        color: Colors.grey.shade300,
-        height: size.height * 0.1,
-        child: const Center(child: Text('banner Ad')),
-      ),
+      bottomNavigationBar: model.bannerSize != null
+          ? model.bannerWidget()
+          : model.bannerPlaceHolder(MediaQuery.of(context).size),
     );
   }
 
@@ -587,6 +587,9 @@ class _EditFlipBookState extends State<EditFlipBook> {
       await image.copy(saveImageToPath);
       print("Image saved to path: $saveImageToPath");
       widget.flipBook.imageUrls.add(saveImageToPath);
+      context
+          .read<FlipBookProvider>()
+          .incrementCameraScannerCameraUploadCount();
       list.add(image.path);
     } on PlatformException {
       // 'Failed to get document path or operation cancelled!';
@@ -605,6 +608,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
         widget.flipBook.imageUrls.length + 1, image.path);
     await image.saveTo(saveImageToPath);
     print("Image saved to path: $saveImageToPath");
+    context.read<FlipBookProvider>().incrementCameraScannerCameraUploadCount();
     widget.flipBook.imageUrls.add(saveImageToPath);
     list.add(image.path);
     context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
@@ -629,7 +633,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
   Future<bool> onDownloadVideo() async {
     await context
         .read<FlipBookProvider>()
-        .createVideo(widget.flipBook, flipSpeed.toInt());
+        .downloadVideo(widget.flipBook, flipSpeed.toInt());
     final videoPath = context.read<FlipBookProvider>().videoOutputPath;
     if (videoPath != null) {
       Fluttertoast.showToast(
@@ -654,6 +658,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
         }
       });
     } else {
+      await context.read<FlipBookProvider>().showInterstitialAd();
       context.read<FlipBookProvider>().startSharing(widget.flipBook);
     }
   }

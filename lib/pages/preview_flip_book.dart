@@ -30,6 +30,9 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(milliseconds: 2)).then((value) {
+      context
+          .read<FlipBookProvider>()
+          .loadBannerAd(MediaQuery.of(context).size.width.toInt());
       if (mounted) {
         setState(() {
           flipSpeed = widget.flipSpeed;
@@ -46,6 +49,7 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final model = context.read<FlipBookProvider>();
 
     return Scaffold(
       body: SafeArea(
@@ -192,11 +196,9 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
           ),
         ),
       ),
-      bottomNavigationBar: Container(
-        color: Colors.grey.shade300,
-        height: size.height * 0.1,
-        child: const Center(child: Text('banner Ad')),
-      ),
+      bottomNavigationBar: model.bannerSize != null
+          ? model.bannerWidget()
+          : model.bannerPlaceHolder(MediaQuery.of(context).size),
     );
   }
 
@@ -252,7 +254,7 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
     });
   }
 
-  void onShare() {
+  Future<void> onShare() async {
     final videoPath = context.read<FlipBookProvider>().videoOutputPath;
     if (videoPath == null) {
       onDownload().then((success) {
@@ -266,13 +268,15 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
           isPlaying = false;
         });
       }
+      await context.read<FlipBookProvider>().showInterstitialAd();
+      context.read<FlipBookProvider>().startSharing(widget.flipBook);
     }
   }
 
   Future<bool> onDownload() async {
     await context
         .read<FlipBookProvider>()
-        .createVideo(widget.flipBook, flipSpeed.toInt());
+        .downloadVideo(widget.flipBook, flipSpeed.toInt());
     final videoPath = context.read<FlipBookProvider>().videoOutputPath;
     if (videoPath != null) {
       if (mounted) {

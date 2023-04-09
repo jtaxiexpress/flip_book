@@ -1,7 +1,7 @@
 import 'dart:math';
 
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flipbook/model/flip_book.dart';
-import 'package:flipbook/pages/new_flip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../custom_widgets/book_card.dart';
 import '../state_management/flipbook_provider.dart';
 import 'edit_flip_book.dart';
+import 'new_flip.dart';
 
 class Home extends StatefulWidget {
   Home({Key? key}) : super(key: key);
@@ -19,6 +20,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  AdmobInterstitial? appOpenId;
+
   final searchController = TextEditingController();
   List<FlipBook> initialBooks = [];
   List<FlipBook> books = [];
@@ -31,11 +34,13 @@ class _HomeState extends State<Home> {
       filterBooks();
       if (mounted) setState(() {});
     });
-    Future.delayed(const Duration(milliseconds: 10)).then((value) {
-      context.read<FlipBookProvider>().loadApplicationDir();
-      context.read<FlipBookProvider>().resetOutputVideoPath();
+    Future.delayed(const Duration(milliseconds: 2)).then((value) {
+      final model = context.read<FlipBookProvider>();
+      model.showAppOpenAd();
+      model.loadBannerAd(MediaQuery.of(context).size.width.toInt());
+      model.loadApplicationDir();
+      model.resetOutputVideoPathAndImageUploadCount();
       loadBooks();
-
       // context.read<FlipBookProvider>().deleteDb();
     });
   }
@@ -43,6 +48,7 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final model = context.read<FlipBookProvider>();
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -55,8 +61,7 @@ class _HomeState extends State<Home> {
               buildSearchField(),
               isLoadingBooks
                   ? Container(
-                      margin: EdgeInsets.only(
-                          top: MediaQuery.of(context).size.height * 0.3),
+                      margin: EdgeInsets.only(top: size.height * 0.3),
                       child: const Center(child: CircularProgressIndicator()))
                   : buildBody(),
             ],
@@ -66,6 +71,8 @@ class _HomeState extends State<Home> {
       floatingActionButton: FloatingActionButton(
         heroTag: const ValueKey("edit"),
         onPressed: () async {
+          //TODO show interstitial ad
+          model.showInterstitialAd();
           await Navigator.push(
             context,
             MaterialPageRoute(
@@ -74,16 +81,16 @@ class _HomeState extends State<Home> {
               ),
             ),
           );
-          context.read<FlipBookProvider>().resetOutputVideoPath();
+          context
+              .read<FlipBookProvider>()
+              .resetOutputVideoPathAndImageUploadCount();
           loadBooks();
         },
         child: const Icon(Icons.edit),
       ),
-      bottomNavigationBar: Container(
-        color: Colors.grey.shade300,
-        height: size.height * 0.1,
-        child: const Center(child: Text('banner Ad')),
-      ),
+      bottomNavigationBar: model.bannerSize != null
+          ? model.bannerWidget()
+          : model.bannerPlaceHolder(MediaQuery.of(context).size),
     );
   }
 
@@ -174,7 +181,7 @@ class _HomeState extends State<Home> {
                             );
                             context
                                 .read<FlipBookProvider>()
-                                .resetOutputVideoPath();
+                                .resetOutputVideoPathAndImageUploadCount();
                             loadBooks();
                             searchController.clear();
                             if (mounted) setState(() {});
