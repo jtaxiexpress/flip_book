@@ -78,7 +78,7 @@ class FlipBookCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(5.0),
               child: Text(
-                book.title.isNotEmpty ? book.title : "empty",
+                book.title.isNotEmpty ? book.title : "no title",
                 textAlign: TextAlign.end,
                 style: const TextStyle(
                   fontWeight: FontWeight.w500,

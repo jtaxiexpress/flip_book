@@ -1,12 +1,10 @@
 import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_session.dart';
 import 'package:ffmpeg_kit_flutter_full_gpl/return_code.dart';
-import 'package:flutter/material.dart' show Colors;
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:media_scanner/media_scanner.dart';
 
 class VideoCreator {
-  Future<void> createVideo(List<String> images, String baseDir,
+  Future<bool> createVideo(List<String> images, String baseDir,
       String outputFileName, int frameRate) async {
     int width = 1280;
     int height = 720;
@@ -38,13 +36,13 @@ class VideoCreator {
 
     if (ReturnCode.isSuccess(await response.getReturnCode())) {
       print('Video created successfully at $outputFileName');
-      Fluttertoast.showToast(
-          msg: "Video created at $outputFileName",
-          backgroundColor: Colors.blue);
+
       await MediaScanner.loadMedia(path: outputFileName);
+      return true;
     } else {
       print('Error creating video: ${await response.getFailStackTrace()}');
-      print('Video creation failed');
+      print('Video creation failed!');
+      return false;
     }
   }
 }

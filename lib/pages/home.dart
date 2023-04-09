@@ -33,7 +33,9 @@ class _HomeState extends State<Home> {
     });
     Future.delayed(const Duration(milliseconds: 10)).then((value) {
       context.read<FlipBookProvider>().loadApplicationDir();
+      context.read<FlipBookProvider>().resetOutputVideoPath();
       loadBooks();
+
       // context.read<FlipBookProvider>().deleteDb();
     });
   }
@@ -72,6 +74,7 @@ class _HomeState extends State<Home> {
               ),
             ),
           );
+          context.read<FlipBookProvider>().resetOutputVideoPath();
           loadBooks();
         },
         child: const Icon(Icons.edit),
@@ -169,6 +172,9 @@ class _HomeState extends State<Home> {
                                   builder: (context) =>
                                       EditFlipBook(flipBook: books[index])),
                             );
+                            context
+                                .read<FlipBookProvider>()
+                                .resetOutputVideoPath();
                             loadBooks();
                             searchController.clear();
                             if (mounted) setState(() {});

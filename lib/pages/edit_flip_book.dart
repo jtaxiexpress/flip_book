@@ -10,11 +10,10 @@ import 'package:flipbook/state_management/flipbook_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-
-import '../utilities/video_creator.dart';
 
 class EditFlipBook extends StatefulWidget {
   const EditFlipBook(
@@ -31,7 +30,7 @@ class EditFlipBook extends StatefulWidget {
 }
 
 class _EditFlipBookState extends State<EditFlipBook> {
-  double flipSpeed = 6;
+  double flipSpeed = 7;
   var flipBookNameController = TextEditingController();
   bool hasFlipAnimation = true;
   final ScrollController scrollController = ScrollController();
@@ -55,6 +54,13 @@ class _EditFlipBookState extends State<EditFlipBook> {
           .read<FlipBookProvider>()
           .flipBookExists(widget.flipBook);
       print('Flip book exits: $alreadyInsertedInDb');
+      if (!alreadyInsertedInDb) {
+        await context.read<FlipBookProvider>().createFlipBook(widget.flipBook);
+        setState(() {
+          alreadyInsertedInDb = true;
+        });
+        print('Inserted now.');
+      }
     });
   }
 
@@ -113,7 +119,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
         scrollDirection: Axis.horizontal,
         scrollController: scrollController,
         // TODO make it non scrollable if want
-        // physics: isReordering ? null :const NeverScrollableScrollPhysics(),
+        physics: isReordering ? null : const NeverScrollableScrollPhysics(),
         header: SizedBox(
             width: MediaQuery.of(context).size.width *
                 (widget.flipBook.imageUrls.length == 1
@@ -363,38 +369,12 @@ class _EditFlipBookState extends State<EditFlipBook> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
             ),
-            onPressed: () async {
-              String title = widget.flipBook.title.trim().isNotEmpty
-                  ? '"${widget.flipBook.title}"'
-                  : DateTime.now().millisecondsSinceEpoch.toString();
-              title = title
-                  .replaceAll(RegExp(r'[^\w\s]+'), '')
-                  .replaceAll(RegExp(r'\s+'), '');
-              final outputFile = "/storage/emulated/0/DCIM/Camera/$title.mp4";
-              final vc = VideoCreator();
-              vc.createVideo(
-                  widget.flipBook.imageUrls,
-                  widget.flipBook.imagesDirPath!,
-                  outputFile,
-                  14 - flipSpeed.toInt());
-              if (alreadyInsertedInDb) {
-                context
-                    .read<FlipBookProvider>()
-                    .updateFlipBook(widget.flipBook);
-              } else {
-                context
-                    .read<FlipBookProvider>()
-                    .createFlipBook(widget.flipBook);
-                setState(() {
-                  alreadyInsertedInDb = true;
-                });
-              }
-            },
+            onPressed: () => onDownloadVideo(),
             child: const Text('Download'),
           ),
         ),
         IconButton(
-          onPressed: () {},
+          onPressed: onShare,
           icon: Icon(
             Icons.file_upload_outlined,
             color: Theme.of(context).primaryColor,
@@ -643,6 +623,38 @@ class _EditFlipBookState extends State<EditFlipBook> {
       setState(() {
         widget.flipBook.title = capitalizeText(val);
       });
+    }
+  }
+
+  Future<bool> onDownloadVideo() async {
+    await context
+        .read<FlipBookProvider>()
+        .createVideo(widget.flipBook, flipSpeed.toInt());
+    final videoPath = context.read<FlipBookProvider>().videoOutputPath;
+    if (videoPath != null) {
+      Fluttertoast.showToast(
+          msg: "Video created at $videoPath", backgroundColor: Colors.blue);
+      if (mounted) {
+        setState(() {});
+      }
+      return true;
+    } else {
+      Fluttertoast.showToast(
+          msg: "Error downloading video!", backgroundColor: Colors.red);
+      return false;
+    }
+  }
+
+  void onShare() async {
+    final videoPath = context.read<FlipBookProvider>().videoOutputPath;
+    if (videoPath == null) {
+      onDownloadVideo().then((success) {
+        if (success) {
+          context.read<FlipBookProvider>().startSharing(widget.flipBook);
+        }
+      });
+    } else {
+      context.read<FlipBookProvider>().startSharing(widget.flipBook);
     }
   }
 }

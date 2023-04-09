@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flip_widget/flip_widget.dart';
 import 'package:flipbook/model/flip_book.dart';
-import 'package:flipbook/utilities/video_creator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+
+import '../state_management/flipbook_provider.dart';
 
 class PreviewFlipBook extends StatefulWidget {
   const PreviewFlipBook(
@@ -20,11 +22,10 @@ class PreviewFlipBook extends StatefulWidget {
 
 class _PreviewFlipBookState extends State<PreviewFlipBook> {
   //frame rate of video
-  double flipSpeed = 6;
+  double flipSpeed = 7;
   bool isPlaying = false;
   int index = 0;
   Timer? timer;
-  final flipKey = GlobalKey<FlipWidgetState>();
   @override
   void initState() {
     super.initState();
@@ -35,6 +36,11 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
         });
       }
     });
+    Fluttertoast.showToast(
+      msg: "Move the slider to change speed.",
+      backgroundColor: Colors.blue,
+      gravity: ToastGravity.BOTTOM,
+    );
   }
 
   @override
@@ -115,29 +121,12 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20)),
                         ),
-                        onPressed: () {
-                          String title = widget.flipBook.title.trim().isNotEmpty
-                              ? '"${widget.flipBook.title}"'
-                              : DateTime.now()
-                                  .millisecondsSinceEpoch
-                                  .toString();
-                          title = title
-                              .replaceAll(RegExp(r'[^\w\s]+'), '')
-                              .replaceAll(RegExp(r'\s+'), '');
-                          final outputFile =
-                              "/storage/emulated/0/DCIM/Camera/$title.mp4";
-                          final vc = VideoCreator();
-                          vc.createVideo(
-                              widget.flipBook.imageUrls,
-                              widget.flipBook.imagesDirPath!,
-                              outputFile,
-                              14 - flipSpeed.toInt());
-                        },
+                        onPressed: () => onDownload(),
                         child: const Text('Download'),
                       ),
                     ),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: onShare,
                       icon: Icon(
                         Icons.file_upload_outlined,
                         color: Theme.of(context).primaryColor,
@@ -236,8 +225,8 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
       // if (index < 0) index = widget.flipBook.imageUrls.length - 1;
       // if (index >= widget.flipBook.imageUrls.length) index = 0;
       if (index == widget.flipBook.imageUrls.length - 1) {
-        t.cancel();
-        isPlaying = false;
+        // t.cancel();
+        // isPlaying = false;
         index = 0;
       } else {
         index = (index + 1) % widget.flipBook.imageUrls.length;
@@ -261,5 +250,46 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
       index = 0;
       play();
     });
+  }
+
+  void onShare() {
+    final videoPath = context.read<FlipBookProvider>().videoOutputPath;
+    if (videoPath == null) {
+      onDownload().then((success) {
+        if (success) {
+          context.read<FlipBookProvider>().startSharing(widget.flipBook);
+        }
+      });
+    } else {
+      if (mounted) {
+        setState(() {
+          isPlaying = false;
+        });
+      }
+    }
+  }
+
+  Future<bool> onDownload() async {
+    await context
+        .read<FlipBookProvider>()
+        .createVideo(widget.flipBook, flipSpeed.toInt());
+    final videoPath = context.read<FlipBookProvider>().videoOutputPath;
+    if (videoPath != null) {
+      if (mounted) {
+        setState(() {
+          isPlaying = false;
+        });
+      }
+      Fluttertoast.showToast(
+          msg: "Video created at $videoPath", backgroundColor: Colors.blue);
+      if (mounted) {
+        setState(() {});
+      }
+      return true;
+    } else {
+      Fluttertoast.showToast(
+          msg: "Error downloading video!", backgroundColor: Colors.red);
+      return false;
+    }
   }
 }

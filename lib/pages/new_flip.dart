@@ -220,7 +220,7 @@ class _NewFlipState extends State<NewFlip> {
           creationDate: DateTime.now().toIso8601String(),
           imageUrls: imagesPaths);
       //TODO push to edit screen
-      Navigator.pushReplacement(
+      await Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => EditFlipBook(
@@ -229,6 +229,7 @@ class _NewFlipState extends State<NewFlip> {
           ),
         ),
       );
+      // context.read<FlipBookProvider>().makeVideoPathNull();
     }
     if (mounted) setState(() {});
   }
@@ -251,7 +252,7 @@ class _NewFlipState extends State<NewFlip> {
           title: flipBookNameController.text,
           creationDate: DateTime.now().toIso8601String(),
           imageUrls: [saveImageToPath]);
-      Navigator.pushReplacement(
+      await Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => EditFlipBook(
@@ -260,6 +261,7 @@ class _NewFlipState extends State<NewFlip> {
           ),
         ),
       );
+      // context.read<FlipBookProvider>().makeVideoPathNull();
     } on PlatformException {
       // 'Failed to get document path or operation cancelled!';
       print("Platform exception");
@@ -291,7 +293,9 @@ class _NewFlipState extends State<NewFlip> {
         ),
       ),
     );
+    // context.read<FlipBookProvider>().makeVideoPathNull();
     widget.onFlipCreate();
+
     if (mounted) setState(() {});
   }
 
