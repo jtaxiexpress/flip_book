@@ -30,6 +30,13 @@
 		<string>Main</string>
 		<key>GADApplicationIdentifier</key>
 		<string>ca-app-pub-8319377204356997~8163903159</string>
+		<key>SKAdNetworkItems</key>
+		<array>
+			<dict>
+				<key>SKAdNetworkIdentifier</key>
+				<string>cstr6suwn9.skadnetwork</string>
+			</dict>
+		</array>
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
@@ -54,8 +61,11 @@
 		<key>NSUserTrackingUsageDescription</key>
 		<string>This identifier will be used to deliver personalized ads to you.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
+		<string>This app requires to access your photo library</string>
 		<key>NSCameraUsageDescription</key>
+		<string>This app requires to add file to your camera</string>
 		<key>NSMicrophoneUsageDescription</key>
+		<string>This app requires to add file to your photo library your microphone</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

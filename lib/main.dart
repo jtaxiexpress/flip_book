@@ -7,10 +7,10 @@ import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
-const openAppAndroidId = /*"ca-app-pub-8319377204356997/4548091779";*/
-    'ca-app-pub-3940256099942544/3419835294'; //test-id
-const openAppIosId = /*"ca-app-pub-8319377204356997/6982683425";*/
-    'ca-app-pub-3940256099942544/5662855259'; //test-id
+const openAppAndroidId = "ca-app-pub-8319377204356997/4548091779";
+//'ca-app-pub-3940256099942544/3419835294'; //test-id
+const openAppIosId = "ca-app-pub-8319377204356997/6982683425";
+//'ca-app-pub-3940256099942544/5662855259'; //test-id
 AppOpenAd? appOpenAd;
 loadOpenAppId() {
   AppOpenAd.load(
@@ -36,7 +36,10 @@ void main() async {
     statusBarColor: Colors.white,
     statusBarIconBrightness: Brightness.dark,
   ));
-  loadOpenAppId();
+  if (Platform.isAndroid) {
+  } else {
+    loadOpenAppId();
+  }
   runApp(
     ChangeNotifierProvider<FlipBookProvider>(
       create: (_) => FlipBookProvider(),

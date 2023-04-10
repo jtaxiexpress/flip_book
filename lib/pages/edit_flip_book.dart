@@ -112,19 +112,21 @@ class _EditFlipBookState extends State<EditFlipBook> {
           ),
         ),
       ),
-      bottomNavigationBar: FutureBuilder<Widget>(
-        future: Ads.buildBannerWidget(
-          context: context,
-        ),
-        builder: (_, snapshot) {
-          if (!snapshot.hasData) return Text("No Banner yet");
+      bottomNavigationBar: SafeArea(
+        child: FutureBuilder<Widget>(
+          future: Ads.buildBannerWidget(
+            context: context,
+          ),
+          builder: (_, snapshot) {
+            if (!snapshot.hasData) return Text("No Banner yet");
 
-          return SizedBox(
-            height: 70,
-            width: MediaQuery.of(context).size.width,
-            child: snapshot.data,
-          );
-        },
+            return SizedBox(
+              height: 70,
+              width: MediaQuery.of(context).size.width,
+              child: snapshot.data,
+            );
+          },
+        ),
       ),
     );
   }

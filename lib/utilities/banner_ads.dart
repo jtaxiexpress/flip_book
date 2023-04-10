@@ -5,10 +5,10 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class Ads {
   static BannerAd? _banner;
-  static const bannerAndroidId = /*"ca-app-pub-8319377204356997/8044731074";*/
-      'ca-app-pub-3940256099942544/6300978111'; //test-id
-  static const bannerIosId = /*"ca-app-pub-8319377204356997/2106842839";*/
-      'ca-app-pub-3940256099942544/2934735716'; //test-id
+  static const bannerAndroidId = "ca-app-pub-8319377204356997/8044731074";
+  // 'ca-app-pub-3940256099942544/6300978111'; //test-id
+  static const bannerIosId = "ca-app-pub-8319377204356997/2106842839";
+  // 'ca-app-pub-3940256099942544/2934735716'; //test-id
   static Future<Widget> buildBannerWidget({
     required BuildContext context,
   }) async {

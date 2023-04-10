@@ -95,19 +95,21 @@ class _HomeState extends State<Home> {
         },
         child: const Icon(Icons.edit),
       ),
-      bottomNavigationBar: FutureBuilder<Widget>(
-        future: Ads.buildBannerWidget(
-          context: context,
-        ),
-        builder: (_, snapshot) {
-          if (!snapshot.hasData) return const Text("...");
+      bottomNavigationBar: SafeArea(
+        child: FutureBuilder<Widget>(
+          future: Ads.buildBannerWidget(
+            context: context,
+          ),
+          builder: (_, snapshot) {
+            if (!snapshot.hasData) return const Text("...");
 
-          return SizedBox(
-            height: 70,
-            width: MediaQuery.of(context).size.width,
-            child: snapshot.data,
-          );
-        },
+            return SizedBox(
+              height: 70,
+              width: MediaQuery.of(context).size.width,
+              child: snapshot.data,
+            );
+          },
+        ),
       ),
     );
   }
