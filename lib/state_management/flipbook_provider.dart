@@ -18,11 +18,21 @@ class FlipBookProvider extends ChangeNotifier {
   String? videoOutputPath;
   int cameraOrScannerCameraImageUploadCount = 0;
 
+  final interstitialAndroidId = "ca-app-pub-8319377204356997/3419924508";
+  // 'ca-app-pub-3940256099942544/1033173712'; //test-id
+  final interstitialIosId = "ca-app-pub-8319377204356997/3157034777";
+  // 'ca-app-pub-3940256099942544/4411468910'; //test-id
+  final bannerAndroidId = "ca-app-pub-8319377204356997/8044731074";
+  // 'ca-app-pub-3940256099942544/6300978111'; //test-id
+  final bannerIosId = "ca-app-pub-8319377204356997/2106842839";
+  // 'ca-app-pub-3940256099942544/2934735716'; //test-id
+  final openAppAndroidId = "ca-app-pub-8319377204356997/4548091779";
+  // 'ca-app-pub-3940256099942544/1033173712';  //test-id
+  final openAppIosId = "ca-app-pub-8319377204356997/6982683425";
+  // 'ca-app-pub-3940256099942544/4411468910';   //test-id
   AdmobBannerSize? bannerSize;
   AdmobInterstitial? interstitialAd;
   AdmobInterstitial? appOpenId;
-
-  final testAppId = "ca-app-pub-3940256099942544~3347511713";
 
   ///creates video and returns video path
   Future<bool> downloadVideo(FlipBook flipBook, int flipSpeed) async {
@@ -70,25 +80,25 @@ class FlipBookProvider extends ChangeNotifier {
       );
   String getInterstitialAdUnitId() {
     if (Platform.isAndroid) {
-      return /*"ca-app-pub-8319377204356997/3419924508";*/ 'ca-app-pub-3940256099942544/1033173712';
+      return interstitialAndroidId;
     } else {
-      return /*"ca-app-pub-8319377204356997/3157034777";*/ 'ca-app-pub-3940256099942544/4411468910';
+      return interstitialIosId;
     }
   }
 
   String getBannerAdUnitId() {
     if (Platform.isAndroid) {
-      return /*"ca-app-pub-8319377204356997/8044731074"; */ 'ca-app-pub-3940256099942544/6300978111';
+      return bannerAndroidId;
     } else {
-      return /*"ca-app-pub-8319377204356997/2106842839";*/ 'ca-app-pub-3940256099942544/2934735716';
+      return bannerIosId;
     }
   }
 
   String getOpenAppAdUnitId() {
     if (Platform.isAndroid) {
-      return /*"ca-app-pub-8319377204356997/4548091779";*/ 'ca-app-pub-3940256099942544/1033173712';
+      return openAppAndroidId;
     } else {
-      return /*"ca-app-pub-8319377204356997/6982683425";*/ 'ca-app-pub-3940256099942544/4411468910';
+      return openAppIosId;
     }
   }
 
