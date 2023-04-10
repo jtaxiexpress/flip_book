@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/state_management/db_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -26,13 +26,8 @@ class FlipBookProvider extends ChangeNotifier {
   // 'ca-app-pub-3940256099942544/6300978111'; //test-id
   final bannerIosId = "ca-app-pub-8319377204356997/2106842839";
   // 'ca-app-pub-3940256099942544/2934735716'; //test-id
-  final openAppAndroidId = "ca-app-pub-8319377204356997/4548091779";
-  // 'ca-app-pub-3940256099942544/1033173712';  //test-id
-  final openAppIosId = "ca-app-pub-8319377204356997/6982683425";
-  // 'ca-app-pub-3940256099942544/4411468910';   //test-id
-  AdmobBannerSize? bannerSize;
-  AdmobInterstitial? interstitialAd;
-  AdmobInterstitial? appOpenId;
+
+  InterstitialAd? interstitialAd;
 
   ///creates video and returns video path
   Future<bool> downloadVideo(FlipBook flipBook, int flipSpeed) async {
@@ -48,31 +43,60 @@ class FlipBookProvider extends ChangeNotifier {
     return success;
   }
 
-  loadBannerAd(width) {
-    bannerSize = AdmobBannerSize.ADAPTIVE_BANNER(width: width);
-    notifyListeners();
+  Future<BannerAd> initBannerAd() async {
+    final bannerAd = BannerAd(
+      adUnitId: getBannerAdUnitId(),
+      request: const AdRequest(),
+      size: AdSize.mediumRectangle,
+      listener: BannerAdListener(
+          onAdLoaded: (ad) {},
+          onAdClosed: (ad) {
+            ad.dispose();
+          },
+          onAdFailedToLoad: (ad, error) {
+            print('Banner ad error: $error');
+          }),
+    );
+    await bannerAd.load();
+    return bannerAd;
   }
 
   Future _loadInterstitial() async {
-    interstitialAd = AdmobInterstitial(
-      adUnitId: getInterstitialAdUnitId(),
-      listener: (AdmobAdEvent event, Map<String, dynamic>? args) {
-        if (event == AdmobAdEvent.closed) interstitialAd?.load();
-        handleEvent(event, args, 'Interstitial', 0);
-      },
-    );
-    interstitialAd?.load();
-    notifyListeners();
+    InterstitialAd.load(
+        adUnitId: getInterstitialAdUnitId(),
+        request: const AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          // Called when an ad is successfully received.
+          onAdLoaded: (ad) {
+            debugPrint('$ad loaded.');
+            ad.fullScreenContentCallback = FullScreenContentCallback(
+              onAdDismissedFullScreenContent: (ad) {
+                ad.dispose();
+                interstitialAd = null;
+                notifyListeners();
+              },
+            );
+            interstitialAd = ad;
+            interstitialAd
+                ?.show()
+                .then((value) => {print("Making null"), notifyListeners()});
+            notifyListeners();
+          },
+          // Called when an ad request failed.
+          onAdFailedToLoad: (LoadAdError error) {
+            debugPrint('InterstitialAd failed to load: $error');
+          },
+        ));
     return;
   }
 
-  Widget bannerWidget() => AdmobBanner(
-        adUnitId: getBannerAdUnitId(),
-        adSize: bannerSize!,
-        onBannerCreated: (AdmobBannerController controller) {
-          print('Banner created');
-        },
-      );
+  Widget bannerWidget(size, bannerAd) => SizedBox(
+      height: size.height * 0.08,
+      width: size.width,
+      child: AdWidget(
+        ad: bannerAd!,
+        key: Key(DateTime.now().millisecondsSinceEpoch.toString()),
+      ));
   Widget bannerPlaceHolder(size) => Container(
         color: Colors.grey.shade200,
         height: size.height * 0.08,
@@ -92,25 +116,6 @@ class FlipBookProvider extends ChangeNotifier {
     } else {
       return bannerIosId;
     }
-  }
-
-  String getOpenAppAdUnitId() {
-    if (Platform.isAndroid) {
-      return openAppAndroidId;
-    } else {
-      return openAppIosId;
-    }
-  }
-
-  void showAppOpenAd() async {
-    appOpenId = AdmobInterstitial(
-      adUnitId: getOpenAppAdUnitId(),
-      listener: (AdmobAdEvent event, Map<String, dynamic>? args) {
-        if (event == AdmobAdEvent.closed) appOpenId?.load();
-        handleEvent(event, args, "Open App Id", 1);
-      },
-    );
-    appOpenId?.load();
   }
 
   Future showInterstitialAd() async {
@@ -222,23 +227,6 @@ class FlipBookProvider extends ChangeNotifier {
     videoOutputPath = null;
     cameraOrScannerCameraImageUploadCount = 0;
     notifyListeners();
-  }
-
-  void handleEvent(AdmobAdEvent event, Map<String, dynamic>? args,
-      String adType, int openApp) {
-    switch (event) {
-      case AdmobAdEvent.loaded:
-        debugPrint('New Admob $adType Ad loaded!');
-        openApp == 1 ? appOpenId?.show() : interstitialAd!.show();
-        if (openApp == 1) {
-          appOpenId = null;
-        } else {
-          interstitialAd = null;
-        }
-        notifyListeners();
-        break;
-      default:
-    }
   }
 
   void showMyToast(String content) {

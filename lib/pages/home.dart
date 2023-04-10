@@ -1,10 +1,10 @@
 import 'dart:math';
 
-import 'package:admob_flutter/admob_flutter.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 import '../custom_widgets/book_card.dart';
@@ -20,13 +20,13 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  AdmobInterstitial? appOpenId;
-
   final searchController = TextEditingController();
   List<FlipBook> initialBooks = [];
   List<FlipBook> books = [];
 
   var isLoadingBooks = false;
+
+  BannerAd? bannerAd;
   @override
   void initState() {
     super.initState();
@@ -34,10 +34,12 @@ class _HomeState extends State<Home> {
       filterBooks();
       if (mounted) setState(() {});
     });
-    Future.delayed(const Duration(milliseconds: 2)).then((value) {
+    Future.delayed(const Duration(milliseconds: 2)).then((value) async {
       final model = context.read<FlipBookProvider>();
-      model.showAppOpenAd();
-      model.loadBannerAd(MediaQuery.of(context).size.width.toInt());
+      bannerAd = await model.initBannerAd();
+      if (mounted) {
+        setState(() {});
+      }
       model.loadApplicationDir();
       model.resetOutputVideoPathAndImageUploadCount();
       loadBooks();
@@ -88,9 +90,9 @@ class _HomeState extends State<Home> {
         },
         child: const Icon(Icons.edit),
       ),
-      bottomNavigationBar: model.bannerSize != null
-          ? model.bannerWidget()
-          : model.bannerPlaceHolder(MediaQuery.of(context).size),
+      bottomNavigationBar: bannerAd != null
+          ? model.bannerWidget(size, bannerAd!)
+          : model.bannerPlaceHolder(size),
     );
   }
 

@@ -8,6 +8,7 @@ import 'package:flipbook/state_management/flipbook_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -26,15 +27,20 @@ class _NewFlipState extends State<NewFlip> {
   List<String> imagesPaths = [];
   String? id;
   Directory? flipDirectory;
+
+  BannerAd? bannerAd;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    Future.delayed(Duration(milliseconds: 20)).then((value) {
-      id = context.read<FlipBookProvider>().generateUniqueId();
-      context
-          .read<FlipBookProvider>()
-          .loadBannerAd(MediaQuery.of(context).size.width.toInt());
+    Future.delayed(Duration(milliseconds: 2)).then((value) async {
+      final model = context.read<FlipBookProvider>();
+      id = model.generateUniqueId();
+      bannerAd = await model.initBannerAd();
+      if (mounted) {
+        setState(() {});
+      }
+
       createFlipImagesDirectory(id!);
     });
   }
@@ -153,9 +159,9 @@ class _NewFlipState extends State<NewFlip> {
           ),
         ),
       ),
-      bottomNavigationBar: model.bannerSize != null
-          ? model.bannerWidget()
-          : model.bannerPlaceHolder(MediaQuery.of(context).size),
+      bottomNavigationBar: bannerAd != null
+          ? model.bannerWidget(size, bannerAd)
+          : model.bannerPlaceHolder(size),
     );
   }
 

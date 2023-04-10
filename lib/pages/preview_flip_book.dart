@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 import '../state_management/flipbook_provider.dart';
@@ -26,13 +27,13 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
   bool isPlaying = false;
   int index = 0;
   Timer? timer;
+
+  BannerAd? bannerAd;
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 2)).then((value) {
-      context
-          .read<FlipBookProvider>()
-          .loadBannerAd(MediaQuery.of(context).size.width.toInt());
+    Future.delayed(const Duration(milliseconds: 2)).then((value) async {
+      bannerAd = await context.read<FlipBookProvider>().initBannerAd();
       if (mounted) {
         setState(() {
           flipSpeed = widget.flipSpeed;
@@ -196,9 +197,9 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
           ),
         ),
       ),
-      bottomNavigationBar: model.bannerSize != null
-          ? model.bannerWidget()
-          : model.bannerPlaceHolder(MediaQuery.of(context).size),
+      bottomNavigationBar: bannerAd != null
+          ? model.bannerWidget(size, bannerAd)
+          : model.bannerPlaceHolder(size),
     );
   }
 

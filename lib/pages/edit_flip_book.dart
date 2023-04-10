@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -39,6 +40,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
   List<String> list = [];
   bool isReordering = false;
 
+  BannerAd? bannerAd;
+
   @override
   void initState() {
     super.initState();
@@ -52,7 +55,10 @@ class _EditFlipBookState extends State<EditFlipBook> {
     Future.delayed(Duration(milliseconds: 2)).then((value) async {
       final model = context.read<FlipBookProvider>();
 
-      model.loadBannerAd(MediaQuery.of(context).size.width.toInt());
+      bannerAd = await model.initBannerAd();
+      if (mounted) {
+        setState(() {});
+      }
       alreadyInsertedInDb = await model.flipBookExists(widget.flipBook);
       print('Flip book exits: $alreadyInsertedInDb');
       if (!alreadyInsertedInDb) {
@@ -105,9 +111,9 @@ class _EditFlipBookState extends State<EditFlipBook> {
           ),
         ),
       ),
-      bottomNavigationBar: model.bannerSize != null
-          ? model.bannerWidget()
-          : model.bannerPlaceHolder(MediaQuery.of(context).size),
+      bottomNavigationBar: bannerAd != null
+          ? model.bannerWidget(size, bannerAd!)
+          : model.bannerPlaceHolder(size),
     );
   }
 
