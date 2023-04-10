@@ -10,6 +10,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 import '../state_management/flipbook_provider.dart';
+import '../utilities/banner_ads.dart';
 
 class PreviewFlipBook extends StatefulWidget {
   const PreviewFlipBook(
@@ -131,7 +132,10 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                       ),
                     ),
                     IconButton(
-                      onPressed: onShare,
+                      onPressed: () async {
+                        await onShare();
+                        setState(() {});
+                      },
                       icon: Icon(
                         Icons.file_upload_outlined,
                         color: Theme.of(context).primaryColor,
@@ -197,9 +201,20 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
           ),
         ),
       ),
-      bottomNavigationBar: bannerAd != null
-          ? model.bannerWidget(size, bannerAd)
-          : model.bannerPlaceHolder(size),
+      bottomNavigationBar: FutureBuilder<Widget>(
+        future: Ads.buildBannerWidget(
+          context: context,
+        ),
+        builder: (_, snapshot) {
+          if (!snapshot.hasData) return Text("No Banner yet");
+
+          return SizedBox(
+            height: 70,
+            width: MediaQuery.of(context).size.width,
+            child: snapshot.data,
+          );
+        },
+      ),
     );
   }
 

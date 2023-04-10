@@ -18,14 +18,14 @@ class FlipBookProvider extends ChangeNotifier {
   String? videoOutputPath;
   int cameraOrScannerCameraImageUploadCount = 0;
 
-  final interstitialAndroidId = "ca-app-pub-8319377204356997/3419924508";
-  // 'ca-app-pub-3940256099942544/1033173712'; //test-id
-  final interstitialIosId = "ca-app-pub-8319377204356997/3157034777";
-  // 'ca-app-pub-3940256099942544/4411468910'; //test-id
-  final bannerAndroidId = "ca-app-pub-8319377204356997/8044731074";
-  // 'ca-app-pub-3940256099942544/6300978111'; //test-id
-  final bannerIosId = "ca-app-pub-8319377204356997/2106842839";
-  // 'ca-app-pub-3940256099942544/2934735716'; //test-id
+  final interstitialAndroidId = /*"ca-app-pub-8319377204356997/3419924508";*/
+      'ca-app-pub-3940256099942544/1033173712'; //test-id
+  final interstitialIosId = /*"ca-app-pub-8319377204356997/3157034777";*/
+      'ca-app-pub-3940256099942544/4411468910'; //test-id
+  final bannerAndroidId = /*"ca-app-pub-8319377204356997/8044731074";*/
+      'ca-app-pub-3940256099942544/6300978111'; //test-id
+  final bannerIosId = /*"ca-app-pub-8319377204356997/2106842839";*/
+      'ca-app-pub-3940256099942544/2934735716'; //test-id
 
   InterstitialAd? interstitialAd;
 
@@ -72,14 +72,14 @@ class FlipBookProvider extends ChangeNotifier {
             ad.fullScreenContentCallback = FullScreenContentCallback(
               onAdDismissedFullScreenContent: (ad) {
                 ad.dispose();
-                interstitialAd = null;
+                // interstitialAd = null;
                 notifyListeners();
               },
             );
             interstitialAd = ad;
             interstitialAd
                 ?.show()
-                .then((value) => {print("Making null"), notifyListeners()});
+                .then((value) => {interstitialAd = null, notifyListeners()});
             notifyListeners();
           },
           // Called when an ad request failed.
@@ -90,18 +90,6 @@ class FlipBookProvider extends ChangeNotifier {
     return;
   }
 
-  Widget bannerWidget(size, bannerAd) => SizedBox(
-      height: size.height * 0.08,
-      width: size.width,
-      child: AdWidget(
-        ad: bannerAd!,
-        key: Key(DateTime.now().millisecondsSinceEpoch.toString()),
-      ));
-  Widget bannerPlaceHolder(size) => Container(
-        color: Colors.grey.shade200,
-        height: size.height * 0.08,
-        child: const Center(child: Text('Loading banner Ad...')),
-      );
   String getInterstitialAdUnitId() {
     if (Platform.isAndroid) {
       return interstitialAndroidId;

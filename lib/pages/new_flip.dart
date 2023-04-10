@@ -12,6 +12,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../utilities/banner_ads.dart';
 import 'edit_flip_book.dart';
 
 class NewFlip extends StatefulWidget {
@@ -159,9 +160,20 @@ class _NewFlipState extends State<NewFlip> {
           ),
         ),
       ),
-      bottomNavigationBar: bannerAd != null
-          ? model.bannerWidget(size, bannerAd)
-          : model.bannerPlaceHolder(size),
+      bottomNavigationBar: FutureBuilder<Widget>(
+        future: Ads.buildBannerWidget(
+          context: context,
+        ),
+        builder: (_, snapshot) {
+          if (!snapshot.hasData) return Text("No Banner yet");
+
+          return SizedBox(
+            height: 70,
+            width: MediaQuery.of(context).size.width,
+            child: snapshot.data,
+          );
+        },
+      ),
     );
   }
 

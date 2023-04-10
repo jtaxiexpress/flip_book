@@ -7,6 +7,7 @@ import 'package:flipbook/custom_widgets/flipped_container.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/pages/preview_flip_book.dart';
 import 'package:flipbook/state_management/flipbook_provider.dart';
+import 'package:flipbook/utilities/banner_ads.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,9 +112,20 @@ class _EditFlipBookState extends State<EditFlipBook> {
           ),
         ),
       ),
-      bottomNavigationBar: bannerAd != null
-          ? model.bannerWidget(size, bannerAd!)
-          : model.bannerPlaceHolder(size),
+      bottomNavigationBar: FutureBuilder<Widget>(
+        future: Ads.buildBannerWidget(
+          context: context,
+        ),
+        builder: (_, snapshot) {
+          if (!snapshot.hasData) return Text("No Banner yet");
+
+          return SizedBox(
+            height: 70,
+            width: MediaQuery.of(context).size.width,
+            child: snapshot.data,
+          );
+        },
+      ),
     );
   }
 
@@ -337,8 +349,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => PreviewFlipBook(
@@ -347,6 +359,10 @@ class _EditFlipBookState extends State<EditFlipBook> {
                   ),
                 ),
               );
+              if (mounted) {
+                setState(() {});
+              }
+
               // print(context.read<FlipBookProvider>().initialBooks);
             },
             child: Text(
@@ -375,12 +391,20 @@ class _EditFlipBookState extends State<EditFlipBook> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
             ),
-            onPressed: () => onDownloadVideo(),
+            onPressed: () {
+              onDownloadVideo();
+              if (mounted) {
+                setState(() {});
+              }
+            },
             child: const Text('Download'),
           ),
         ),
         IconButton(
-          onPressed: onShare,
+          onPressed: () async {
+            await onShare();
+            setState(() {});
+          },
           icon: Icon(
             Icons.file_upload_outlined,
             color: Theme.of(context).primaryColor,
@@ -655,7 +679,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
     }
   }
 
-  void onShare() async {
+  Future<void> onShare() async {
     final videoPath = context.read<FlipBookProvider>().videoOutputPath;
     if (videoPath == null) {
       onDownloadVideo().then((success) {

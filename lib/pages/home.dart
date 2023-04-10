@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flipbook/model/flip_book.dart';
+import 'package:flipbook/utilities/banner_ads.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -83,6 +85,9 @@ class _HomeState extends State<Home> {
               ),
             ),
           );
+          if (mounted) {
+            setState(() {});
+          }
           context
               .read<FlipBookProvider>()
               .resetOutputVideoPathAndImageUploadCount();
@@ -90,9 +95,20 @@ class _HomeState extends State<Home> {
         },
         child: const Icon(Icons.edit),
       ),
-      bottomNavigationBar: bannerAd != null
-          ? model.bannerWidget(size, bannerAd!)
-          : model.bannerPlaceHolder(size),
+      bottomNavigationBar: FutureBuilder<Widget>(
+        future: Ads.buildBannerWidget(
+          context: context,
+        ),
+        builder: (_, snapshot) {
+          if (!snapshot.hasData) return const Text("...");
+
+          return SizedBox(
+            height: 70,
+            width: MediaQuery.of(context).size.width,
+            child: snapshot.data,
+          );
+        },
+      ),
     );
   }
 
@@ -181,6 +197,10 @@ class _HomeState extends State<Home> {
                                   builder: (context) =>
                                       EditFlipBook(flipBook: books[index])),
                             );
+                            if (mounted) {
+                              setState(() {});
+                            }
+
                             context
                                 .read<FlipBookProvider>()
                                 .resetOutputVideoPathAndImageUploadCount();
