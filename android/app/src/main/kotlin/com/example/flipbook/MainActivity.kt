@@ -1,4 +1,4 @@
-package com.example.flipbook
+package com.FlipbookApp
 
 import io.flutter.embedding.android.FlutterActivity
 
