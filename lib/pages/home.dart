@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../custom_widgets/book_card.dart';
@@ -68,6 +69,20 @@ class _HomeState extends State<Home> {
                       margin: EdgeInsets.only(top: size.height * 0.3),
                       child: const Center(child: CircularProgressIndicator()))
                   : buildBody(),
+              Container(
+                  alignment: Alignment.bottomLeft,
+                  padding: EdgeInsets.only(top: 10, right: 10),
+                  child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () async {
+                        _showLicense(context);
+                      },
+                      icon: Icon(
+                        Icons.info,
+                        color: Colors.grey,
+                        size: 14,
+                      ))),
             ],
           ),
         ),
@@ -277,5 +292,17 @@ class _HomeState extends State<Home> {
         random.nextInt(20) + 10; // generate a random length between 1 and 6
     return String.fromCharCodes(Iterable.generate(
         length, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
+  }
+
+//show licences
+  Future _showLicense(BuildContext context) async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    showAboutDialog(
+      context: context,
+      applicationName: packageInfo.appName,
+      applicationVersion: packageInfo.version,
+      applicationIcon: Icon(Icons.tag_faces),
+      applicationLegalese: "Minerva K.K",
+    );
   }
 }
