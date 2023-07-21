@@ -674,7 +674,9 @@ class _EditFlipBookState extends State<EditFlipBook> {
         setState(() {});
       }
       return true;
-    } else {
+    }
+    else {
+    print("my download path :- ${videoPath}");
       Fluttertoast.showToast(
           msg: "Error downloading video!", backgroundColor: Colors.red);
       return false;

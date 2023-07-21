@@ -1,6 +1,11 @@
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_session.dart';
-import 'package:ffmpeg_kit_flutter/return_code.dart';
+// import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+// import 'package:ffmpeg_kit_flutter/ffmpeg_session.dart';
+// import 'package:ffmpeg_kit_flutter/return_code.dart';
+import 'dart:io' show Platform;
+
+import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_session.dart';
+import 'package:ffmpeg_kit_flutter_full_gpl/return_code.dart';
 import 'package:media_scanner/media_scanner.dart';
 
 class VideoCreator {
@@ -37,8 +42,14 @@ class VideoCreator {
     if (ReturnCode.isSuccess(await response.getReturnCode())) {
       print('Video created successfully at $outputFileName');
 
-      await MediaScanner.loadMedia(path: outputFileName);
+      if (Platform.isAndroid) {
+        await MediaScanner.loadMedia(path: outputFileName);
+      }
       return true;
+    } else if (ReturnCode.isCancel(ReturnCode(400))) {
+      // CANCEL
+      print('Video creation Cancle!');
+      return false;
     } else {
       print('Error creating video: ${await response.getFailStackTrace()}');
       print('Video creation failed!');

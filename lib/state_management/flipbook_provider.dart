@@ -33,13 +33,18 @@ class FlipBookProvider extends ChangeNotifier {
   Future<bool> downloadVideo(FlipBook flipBook, int flipSpeed) async {
     //TODO show interstitial ad
     await showInterstitialAd();
-    final outputFile = _getVideoOutputFileName(flipBook.title);
+    String outputFile = await _getVideoOutputFileName(flipBook.title);
     final success = await _videoCreator.createVideo(flipBook.imageUrls,
         flipBook.imagesDirPath!, outputFile, 14 - flipSpeed.toInt());
     if (success) {
-      videoOutputPath = outputFile;
+      print("my download path :- 0");
+      videoOutputPath =  outputFile;
       notifyListeners();
+    }else{
+      print("my download path :- 1");
+
     }
+
     return success;
   }
 
@@ -110,16 +115,41 @@ class FlipBookProvider extends ChangeNotifier {
     await _loadInterstitial();
   }
 
-  String _getVideoOutputFileName(String fliTitle) {
+  Future<String> _getVideoOutputFileName(String fliTitle) async {
     String title = fliTitle.trim().isNotEmpty
         ? fliTitle
         : DateTime.now().millisecondsSinceEpoch.toString();
     title = title
         .replaceAll(RegExp(r'[^\w\s]+'), '')
         .replaceAll(RegExp(r'\s+'), '');
-    final outputFile = "/storage/emulated/0/DCIM/Camera/$title.mp4";
-    return outputFile;
+    //final outputFile = "/storage/emulated/0/DCIM/Camera/$title.mp4";
+    String? outputFile = await getDownloadPath();
+
+    if(outputFile!=null){
+      outputFile = '$outputFile/$title.mp4';
+    }
+    print('My output File ${outputFile}');
+
+    return outputFile??"";
   }
+
+  Future<String?> getDownloadPath() async {
+    Directory? directory;
+    try {
+      if (Platform.isIOS) {
+        directory = await getApplicationDocumentsDirectory();
+      } else {
+        directory = Directory('/storage/emulated/0/Download');
+        // Put file in global download folder, if for an unknown reason it didn't exist, we fallback
+        // ignore: avoid_slow_async_io
+        if (!await directory.exists()) directory = await getApplicationDocumentsDirectory();
+      }
+    } catch (err, stack) {
+      print("Cannot get download folder path");
+    }
+    return directory?.path;
+  }
+
 
   Future<void> loadApplicationDir() async {
     applicationDir = await getApplicationDocumentsDirectory();

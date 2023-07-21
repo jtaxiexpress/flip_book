@@ -16,19 +16,20 @@ dependencies:
   font_awesome_flutter: ^10.4.0
   jiffy: ^6.1.0
   carousel_slider: ^4.2.1
-  image_picker: ^0.8.7+1
+  image_picker: ^1.0.1
   path_provider: ^2.0.14
   document_scanner_flutter: ^0.2.7
   permission_handler: ^10.2.0
-  ffmpeg_kit_flutter: 5.1.0-LTS
+#  ffmpeg_kit_flutter: 5.1.0-LTS
   fluttertoast: ^8.2.1
   provider: ^6.0.5
   media_scanner: ^2.1.0
-  share_plus: ^4.5.3
+  share_plus: ^7.0.2
   sqflite: ^2.2.6
-  google_mobile_ads: ^2.4.0
+  google_mobile_ads: ^3.0.0
   flutter_launcher_icons: ^0.13.0
-  package_info_plus: ^3.1.0
+  package_info_plus: ^4.0.2
+  ffmpeg_kit_flutter_full_gpl:
 
 dev_dependencies:
   flutter_test:
