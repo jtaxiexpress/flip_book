@@ -137,7 +137,7 @@ class FlipBookProvider extends ChangeNotifier {
     Directory? directory;
     try {
       if (Platform.isIOS) {
-        directory = await getApplicationDocumentsDirectory();
+        directory = await getApplicationSupportDirectory();
 
       } else {
         directory = Directory('/storage/emulated/0/DCIM/Camera');
