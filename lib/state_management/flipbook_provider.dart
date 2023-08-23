@@ -4,6 +4,7 @@ import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/state_management/db_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -124,7 +125,6 @@ class FlipBookProvider extends ChangeNotifier {
         .replaceAll(RegExp(r'\s+'), '');
     //final outputFile = "/storage/emulated/0/DCIM/Camera/$title.mp4";
     String? outputFile = await getDownloadPath();
-
     if(outputFile!=null){
       outputFile = '$outputFile/$title.mp4';
     }
@@ -138,11 +138,13 @@ class FlipBookProvider extends ChangeNotifier {
     try {
       if (Platform.isIOS) {
         directory = await getApplicationDocumentsDirectory();
+
       } else {
         directory = Directory('/storage/emulated/0/DCIM/Camera');
         // Put file in global download folder, if for an unknown reason it didn't exist, we fallback
         // ignore: avoid_slow_async_io
-        if (!await directory.exists()) directory = await getApplicationDocumentsDirectory();
+        if (!await directory.exists())
+          directory = await getApplicationDocumentsDirectory();
       }
     } catch (err, stack) {
       print("Cannot get download folder path");

@@ -21,7 +21,7 @@ dependencies:
   path_provider: ^2.0.14
   document_scanner_flutter: ^0.2.7
   permission_handler: ^10.2.0
-
+  image_gallery_saver: ^2.0.3
   fluttertoast: ^8.2.1
   provider: ^6.0.5
   media_scanner: ^2.1.0
