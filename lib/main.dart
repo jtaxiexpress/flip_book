@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flipbook/l10n/l10n.dart';
 import 'package:flipbook/pages/home.dart';
 import 'package:flipbook/state_management/flipbook_provider.dart';
 import 'package:flutter/material.dart';
@@ -53,6 +54,8 @@ class FlipBookApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      localizationsDelegates: L10n.localizationsDelegates, // 追加
+      supportedLocales: L10n.supportedLocales,
       home: Home(),
       debugShowCheckedModeBanner: false,
     );

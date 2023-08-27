@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:document_scanner_flutter/configs/configs.dart';
 import 'package:document_scanner_flutter/document_scanner_flutter.dart';
+import 'package:flipbook/l10n/l10n.dart';
 import 'package:flipbook/main.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/pages/home.dart';
@@ -26,7 +27,6 @@ class NewFlip extends StatefulWidget {
 }
 
 class _NewFlipState extends State<NewFlip> {
-
   final flipBookNameController = TextEditingController();
   final ImagePicker picker = ImagePicker();
   List<String> imagesPaths = [];
@@ -48,7 +48,6 @@ class _NewFlipState extends State<NewFlip> {
 
       createFlipImagesDirectory(id!);
     });
-
   }
 
   @override
@@ -72,8 +71,9 @@ class _NewFlipState extends State<NewFlip> {
                         print("callll bbbbbbbbbbbbbbbbb");
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => FlipBookApp()),);
-
+                          MaterialPageRoute(
+                              builder: (context) => FlipBookApp()),
+                        );
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(top: 8.0),
@@ -196,6 +196,8 @@ class _NewFlipState extends State<NewFlip> {
   }
 
   Widget buildBookNameField() {
+    final l10n = L10n.of(context)!;
+
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.09,
       child: TextField(
@@ -210,7 +212,7 @@ class _NewFlipState extends State<NewFlip> {
         maxLength: 30,
         keyboardType: TextInputType.name,
         decoration: InputDecoration(
-          hintText: "Flip Book's Title",
+          hintText: l10n.title,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
           filled: true,

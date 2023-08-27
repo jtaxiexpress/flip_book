@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flipbook/l10n/l10n.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/utilities/banner_ads.dart';
 import 'package:flutter/material.dart';
@@ -33,10 +34,8 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-     loadBooks();
-    setState(() {
-
-    });
+    loadBooks();
+    setState(() {});
     searchController.addListener(() {
       filterBooks();
       if (mounted) setState(() {});
@@ -52,7 +51,6 @@ class _HomeState extends State<Home> {
       loadBooks();
       // context.read<FlipBookProvider>().deleteDb();
     });
-
   }
 
   @override
@@ -73,8 +71,7 @@ class _HomeState extends State<Home> {
                   ? Container(
                       margin: EdgeInsets.only(top: size.height * 0.3),
                       child: const Center(child: CircularProgressIndicator()))
-                  :
-              buildBody(),
+                  : buildBody(),
               Container(
                   alignment: Alignment.bottomLeft,
                   padding: EdgeInsets.only(top: 10, right: 10),
@@ -109,7 +106,9 @@ class _HomeState extends State<Home> {
           if (mounted) {
             setState(() {});
           }
-          context.read<FlipBookProvider>().resetOutputVideoPathAndImageUploadCount();
+          context
+              .read<FlipBookProvider>()
+              .resetOutputVideoPathAndImageUploadCount();
           loadBooks();
         },
         child: const Icon(Icons.edit),
@@ -134,13 +133,15 @@ class _HomeState extends State<Home> {
   }
 
   Widget buildSearchField() {
+    final l10n = L10n.of(context)!;
+
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.06,
       child: TextField(
         keyboardType: TextInputType.name,
         controller: searchController,
         decoration: InputDecoration(
-          hintText: "Search",
+          hintText: l10n.search,
           suffixIcon: searchController.text.isEmpty
               ? null
               : IconButton(
@@ -187,6 +188,8 @@ class _HomeState extends State<Home> {
 
   Expanded buildBody() {
     final size = MediaQuery.of(context).size;
+    final l10n = L10n.of(context)!;
+
     return Expanded(
       child: ListView(
         children: [
@@ -197,7 +200,7 @@ class _HomeState extends State<Home> {
                     height: size.height * 0.6,
                     child: Center(
                       child: Text(
-                        capitalizeText('No flipbooks for now.'),
+                        capitalizeText(l10n.noFlipbook),
                         style: TextStyle(color: Colors.grey, fontSize: 13),
                       ),
                     ),
@@ -245,37 +248,40 @@ class _HomeState extends State<Home> {
   }
 
   Padding buildHeader(BuildContext context) {
+    final l10n = L10n.of(context)!;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Flip Book',
+          Text(
+            l10n.flipbook,
             style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              shape: BoxShape.circle,
-            ),
-            width: MediaQuery.of(context).size.width * 0.1,
-            height: MediaQuery.of(context).size.width * 0.1,
-            child: Center(
-              child: IconButton(
-                style: IconButton.styleFrom(shape: const CircleBorder()),
-                onPressed: () {
-                  // ToDO add crown button onPressed
-                },
-                icon: const Icon(
-                  FontAwesomeIcons.crown,
-                  size: 15,
-                  color: Colors.orange,
-                ),
-                color: Colors.black,
-              ),
-            ),
-          ),
+          //うんち
+          // Container(
+          //   decoration: BoxDecoration(
+          //     color: Colors.grey.shade300,
+          //     shape: BoxShape.circle,
+          //   ),
+          //   width: MediaQuery.of(context).size.width * 0.1,
+          //   height: MediaQuery.of(context).size.width * 0.1,
+          //   child: Center(
+          //     child: IconButton(
+          //       style: IconButton.styleFrom(shape: const CircleBorder()),
+          //       onPressed: () {
+          //         // ToDO add crown button onPressed
+          //       },
+          //       icon: const Icon(
+          //         FontAwesomeIcons.crown,
+          //         size: 15,
+          //         color: Colors.orange,
+          //       ),
+          //       color: Colors.black,
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
