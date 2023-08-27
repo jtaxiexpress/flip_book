@@ -2,7 +2,7 @@
 "NSCameraUsageDescription"="Requests are made for the purpose of taking photos for display and use in the application.";
 "NSMicrophoneUsageDescription"= "This app requires to add file to your photo library your microphone";
 "NSPhotoLibraryUsageDescription" = "To upload photos, please allow permission to access your photo library.";
-"NSPhotoLibraryAddUsageDescription" = "Requests are made for the purpose of taking photos for display and use in the application."
+"NSPhotoLibraryAddUsageDescription" = "Requests are made for the purpose of taking photos for display and use in the application.";
 
 //"NSUserTrackingUsageDescription" = "If you allow it, the ads you see will be more relevant to your interests.";
 
