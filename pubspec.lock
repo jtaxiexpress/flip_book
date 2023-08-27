@@ -132,11 +132,12 @@ packages:
   document_scanner_flutter:
     dependency: "direct main"
     description:
-      name: document_scanner_flutter
-      sha256: "1e595ac0ab436b509df7dc66e76b9e8792278214241be963b359e21d352b0f0f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.7"
+      path: "."
+      ref: master
+      resolved-ref: de672b4cf9e03d88a2c5e87019d18892cea0c2a7
+      url: "https://github.com/sanjeevinnobit/document_scanner_flutter.git"
+    source: git
+    version: "0.2.6"
   fake_async:
     dependency: transitive
     description:

@@ -22,7 +22,10 @@ dependencies:
   carousel_slider: ^4.2.1
   image_picker: ^1.0.1
   path_provider: ^2.0.14
-  document_scanner_flutter: ^0.2.7
+  document_scanner_flutter:
+    git:
+      url: https://github.com/sanjeevinnobit/document_scanner_flutter.git
+      ref: master
   permission_handler: ^10.2.0
   image_gallery_saver: ^2.0.3
   fluttertoast: ^8.2.1
