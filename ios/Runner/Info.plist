@@ -40,6 +40,8 @@
 	<string>This app requires to access your photo library</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>This identifier will be used to deliver personalized ads to you.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+    <string>ライブラリに保存するよ</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>

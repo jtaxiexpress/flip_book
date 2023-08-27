@@ -522,7 +522,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
     final l10n = L10n.of(context)!;
 
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.09,
+      height: MediaQuery.of(context).size.height * 0.075,
       child: TextField(
         controller: flipBookNameController,
         onSubmitted: (val) {
