@@ -1,8 +1,8 @@
 "CFBundleDisplayName" = "パラパラ漫画";
-"NSCameraUsageDescription"="画像をアップロードするにはアクセス許可が必要です。";
-"NSMicrophoneUsageDescription"= "画像ファイルにアクセスするには許可が必要です。";
-"NSPhotoLibraryUsageDescription" = "画像をアップロードするにはアクセス許可が必要です。";
-"NSPhotoLibraryAddUsageDescription" = "画像をアップロードするにはアクセス許可が必要です。";
+"NSCameraUsageDescription"="アプリに表示・使用するための写真を撮影する目的でリクエストします。";
+"NSMicrophoneUsageDescription"= "アプリに表示・使用するための写真を撮影する目的でリクエストします。";
+"NSPhotoLibraryUsageDescription" = "アプリに表示・使用するための写真をライブラリから選択する目的でリクエストします。";
+"NSPhotoLibraryAddUsageDescription" = "アプリからデバイスに画像を保存するにはアクセス許可が必要です。";
 
 //"NSUserTrackingUsageDescription" = "「許可」していただくと、表示される広告が興味関心により合ったものになります。";
 
