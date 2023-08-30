@@ -37,6 +37,8 @@ dependencies:
   flutter_launcher_icons: ^0.13.0
   package_info_plus: ^4.0.2
   ffmpeg_kit_flutter_full_gpl:
+  shared_preferences: ^2.2.0
+  app_tracking_transparency: ^2.0.4
 
 dev_dependencies:
   flutter_test:

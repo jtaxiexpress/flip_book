@@ -3,8 +3,7 @@
 "NSMicrophoneUsageDescription"= "Permission is required to take photos to create a Flipbook.";
 "NSPhotoLibraryUsageDescription" = "Permission is required to retrieve images from the photo library to create a Flipbook";
 "NSPhotoLibraryAddUsageDescription" = "Permissions are required to save images from the app to the device.";
-
-//"NSUserTrackingUsageDescription" = "If you allow it, the ads you see will be more relevant to your interests.";
+"NSUserTrackingUsageDescription" = "If you allow it, the ads you see will be more relevant to your interests.";
 
 /*
   InfoPlist.strings
