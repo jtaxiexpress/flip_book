@@ -42,3 +42,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Admob
+/lib/utilities/ad_helper.dart.dart
+/lib/utilities/banner_ads.dart
