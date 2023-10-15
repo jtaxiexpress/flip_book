@@ -37,6 +37,7 @@ class FlipBookProvider extends ChangeNotifier {
     String outputFile = await _getVideoOutputFileName(flipBook.title);
     final success = await _videoCreator.createVideo(flipBook.imageUrls,
         flipBook.imagesDirPath!, outputFile,  flipSpeed.toInt());
+
     if (success) {
       print("my download path :- 0");
       videoOutputPath =  outputFile;
@@ -137,14 +138,13 @@ class FlipBookProvider extends ChangeNotifier {
     Directory? directory;
     try {
       if (Platform.isIOS) {
-        directory = await getApplicationSupportDirectory();
+        directory = await getApplicationDocumentsDirectory();
 
       } else {
         directory = Directory('/storage/emulated/0/DCIM/Camera');
         // Put file in global download folder, if for an unknown reason it didn't exist, we fallback
         // ignore: avoid_slow_async_io
-        if (!await directory.exists())
-          directory = await getApplicationDocumentsDirectory();
+        if (!await directory.exists()) directory = await getApplicationDocumentsDirectory();
       }
     } catch (err, stack) {
       print("Cannot get download folder path");
