@@ -46,5 +46,3 @@ app.*.map.json
 # Admob
 /lib/utilities/ad_helper.dart.dart
 /lib/utilities/banner_ads.dart
-/ios/Runner/Info.plist
-/android/app/src/main/AndroidManifest.xml
