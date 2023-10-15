@@ -1,0 +1,14 @@
+"CFBundleDisplayName" = "パラパラ漫画";
+"NSCameraUsageDescription"="パラパラ漫画を作成するための写真を撮影するには許可が必要です。";
+"NSMicrophoneUsageDescription"= "パラパラ漫画を作成するための写真を撮影するには許可が必要です。";
+"NSPhotoLibraryUsageDescription" = "パラパラ漫画を作成するための画像をフォトライブラリから取得するには許可が必要です。";
+"NSPhotoLibraryAddUsageDescription" = "このアプリからデバイスに画像を保存するにはアクセス許可が必要です。";
+"NSUserTrackingUsageDescription" = "「許可」していただくと、表示される広告が興味関心により合ったものになります。";
+
+/*
+  InfoPlist.strings
+  Runner
+
+  Created by T on 2023/08/27.
+  
+*/

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:document_scanner_flutter/configs/configs.dart';
 import 'package:document_scanner_flutter/document_scanner_flutter.dart';
 import 'package:flipbook/custom_widgets/flipped_container.dart';
+import 'package:flipbook/l10n/l10n.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/pages/preview_flip_book.dart';
 import 'package:flipbook/state_management/flipbook_provider.dart';
@@ -32,7 +33,7 @@ class EditFlipBook extends StatefulWidget {
 }
 
 class _EditFlipBookState extends State<EditFlipBook> {
-  double flipSpeed = 7;
+  double flipSpeed = 4;
   var flipBookNameController = TextEditingController();
   bool hasFlipAnimation = true;
   final ScrollController scrollController = ScrollController();
@@ -87,6 +88,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context)!;
+
     final size = MediaQuery.of(context).size;
     final model = context.read<FlipBookProvider>();
     return Scaffold(
@@ -331,6 +334,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
   }
 
   Row buildSwipePreviewBtnsRow() {
+    final l10n = L10n.of(context)!;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -368,7 +373,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
               // print(context.read<FlipBookProvider>().initialBooks);
             },
             child: Text(
-              'Preview',
+              l10n.preview,
               style: TextStyle(
                 color: Colors.grey.shade600,
                 decoration: TextDecoration.underline,
@@ -382,6 +387,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
   }
 
   Row buildDownloadUploadBtnsRow(ui.Size size, BuildContext context) {
+    final l10n = L10n.of(context)!;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -399,7 +406,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
                 setState(() {});
               }
             },
-            child: const Text('Download'),
+            child: Text(l10n.download),
           ),
         ),
         IconButton(
@@ -418,6 +425,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
   }
 
   Card buildFlipSpeedTile(ui.Size size) {
+    final l10n = L10n.of(context)!;
+
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
@@ -436,8 +445,8 @@ class _EditFlipBookState extends State<EditFlipBook> {
                 children: [
                   Padding(
                     padding: EdgeInsets.only(left: size.width * 0.05),
-                    child: const Text(
-                      'Flip Speed',
+                    child: Text(
+                      l10n.flipSpeed,
                       style: TextStyle(fontSize: 20),
                     ),
                   ),
@@ -473,14 +482,16 @@ class _EditFlipBookState extends State<EditFlipBook> {
   }
 
   Card buildFlipAnimationTile() {
+    final l10n = L10n.of(context)!;
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ListTile(
         leading: const Icon(Icons.animation, color: Colors.orange, size: 28),
-        title: const Text(
-          'Flip Animation',
-          style: TextStyle(fontSize: 20),
+        title: Text(
+          l10n.flipAnimation,
+          style: TextStyle(fontSize: 18),
         ),
         trailing: Platform.isIOS
             ? CupertinoSwitch(
@@ -508,8 +519,10 @@ class _EditFlipBookState extends State<EditFlipBook> {
   }
 
   Widget buildBookNameField() {
+    final l10n = L10n.of(context)!;
+
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.09,
+      height: MediaQuery.of(context).size.height * 0.075,
       child: TextField(
         controller: flipBookNameController,
         onSubmitted: (val) {
@@ -520,7 +533,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
         maxLength: 30,
         keyboardType: TextInputType.name,
         decoration: InputDecoration(
-          hintText: "Flip Book's Title",
+          hintText: l10n.title,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
           filled: true,
@@ -663,22 +676,22 @@ class _EditFlipBookState extends State<EditFlipBook> {
   }
 
   Future<bool> onDownloadVideo() async {
+    final l10n = L10n.of(context)!;
+
     await context
         .read<FlipBookProvider>()
         .downloadVideo(widget.flipBook, flipSpeed.toInt());
     final videoPath = context.read<FlipBookProvider>().videoOutputPath;
     if (videoPath != null) {
       Fluttertoast.showToast(
-          msg: "Video created at $videoPath", backgroundColor: Colors.blue);
+          msg: l10n.successDownload, backgroundColor: Colors.blue);
       if (mounted) {
         setState(() {});
       }
       return true;
-    }
-    else {
-    print("my download path :- ${videoPath}");
-      Fluttertoast.showToast(
-          msg: "Error downloading video!", backgroundColor: Colors.red);
+    } else {
+      print("my download path :- ${videoPath}");
+      Fluttertoast.showToast(msg: l10n.error, backgroundColor: Colors.red);
       return false;
     }
   }

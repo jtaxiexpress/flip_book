@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flipbook/l10n/l10n.dart';
 import 'package:flipbook/pages/edit_flip_book.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,8 @@ class FlipBookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context)!;
+
     Image image = Image.file(File(book.imageUrls[0]));
     Completer<ui.Image> completer = Completer<ui.Image>();
     image.image.resolve(const ImageConfiguration()).addListener(
@@ -71,14 +74,14 @@ class FlipBookCard extends StatelessWidget {
                           ),
                         ),
                       )
-                    : const Center(child: Text('Loading...'));
+                    : Center(child: Text(l10n.loading));
               },
             ),
             SizedBox(height: MediaQuery.of(context).size.height * 0.002),
             Padding(
               padding: const EdgeInsets.all(5.0),
               child: Text(
-                book.title.isNotEmpty ? book.title : "no title",
+                book.title.isNotEmpty ? book.title : l10n.notitle,
                 textAlign: TextAlign.end,
                 style: const TextStyle(
                   fontWeight: FontWeight.w500,
@@ -104,6 +107,8 @@ class FlipBookCard extends StatelessWidget {
   }
 
   Future<bool?> showDeleteConfirmationDialog(BuildContext context) {
+    final l10n = L10n.of(context)!;
+
     return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -115,17 +120,16 @@ class FlipBookCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            content: const Text('Do you want to delete this Flip Book?'),
+            content: Text(l10n.deleteFlipbook),
             actions: <Widget>[
               CupertinoDialogAction(
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
                 onPressed: () {
                   Navigator.of(context).pop(false);
                 },
               ),
               CupertinoDialogAction(
-                child:
-                    const Text('Delete', style: TextStyle(color: Colors.red)),
+                child: Text(l10n.delete, style: TextStyle(color: Colors.red)),
                 onPressed: () {
                   Navigator.of(context).pop(true);
                 },
@@ -136,18 +140,16 @@ class FlipBookCard extends StatelessWidget {
           // Show Material-style dialog on Android and other platforms
           return AlertDialog(
             title: Text(capitalizeText(book.title)),
-            content: const Text('Do you want to delete this Flip book?'),
+            content: Text(l10n.deleteFlipbook),
             actions: <Widget>[
               TextButton(
-                child:
-                    const Text('Cancel', style: TextStyle(color: Colors.blue)),
+                child: Text(l10n.cancel, style: TextStyle(color: Colors.blue)),
                 onPressed: () {
                   Navigator.of(context).pop(false);
                 },
               ),
               TextButton(
-                child:
-                    const Text('Delete', style: TextStyle(color: Colors.red)),
+                child: Text(l10n.delete, style: TextStyle(color: Colors.red)),
                 onPressed: () {
                   Navigator.of(context).pop(true);
                 },

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flipbook/l10n/l10n.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +53,7 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final model = context.read<FlipBookProvider>();
+    final l10n = L10n.of(context)!;
 
     return Scaffold(
       body: SafeArea(
@@ -128,7 +130,7 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                               borderRadius: BorderRadius.circular(20)),
                         ),
                         onPressed: () => onDownload(),
-                        child: const Text('Download'),
+                        child: Text(l10n.download),
                       ),
                     ),
                     IconButton(
@@ -161,8 +163,8 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Flip Speed',
+                              Text(
+                                l10n.flipSpeed,
                                 style: TextStyle(
                                     fontWeight: FontWeight.w500, fontSize: 20),
                               ),
@@ -241,7 +243,7 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
     // final delay = (double.parse(frames.toStringAsFixed(2)) * 100).toInt();
     // print("delay: $delay");
     timer = Timer.periodic(
-        Duration(milliseconds: (13 - flipSpeed.toInt()) * 50), (t) {
+        Duration(milliseconds: (13 - flipSpeed.toInt()) * 60), (t) {
       // if (index < 0) index = widget.flipBook.imageUrls.length - 1;
       // if (index >= widget.flipBook.imageUrls.length) index = 0;
       if (index == widget.flipBook.imageUrls.length - 1) {
@@ -292,6 +294,8 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
   }
 
   Future<bool> onDownload() async {
+    final l10n = L10n.of(context)!;
+
     await context
         .read<FlipBookProvider>()
         .downloadVideo(widget.flipBook, flipSpeed.toInt());
@@ -303,14 +307,13 @@ class _PreviewFlipBookState extends State<PreviewFlipBook> {
         });
       }
       Fluttertoast.showToast(
-          msg: "Video created at $videoPath", backgroundColor: Colors.blue);
+          msg: l10n.successDownload, backgroundColor: Colors.blue);
       if (mounted) {
         setState(() {});
       }
       return true;
     } else {
-      Fluttertoast.showToast(
-          msg: "Error downloading video!", backgroundColor: Colors.red);
+      Fluttertoast.showToast(msg: l10n.error, backgroundColor: Colors.red);
       return false;
     }
   }

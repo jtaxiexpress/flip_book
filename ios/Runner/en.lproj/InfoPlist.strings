@@ -1,0 +1,14 @@
+"CFBundleDisplayName" = "Flipbook Maker";
+"NSCameraUsageDescription"="Permission is required to take photos to create a Flipbook.";
+"NSMicrophoneUsageDescription"= "Permission is required to take photos to create a Flipbook.";
+"NSPhotoLibraryUsageDescription" = "Permission is required to retrieve images from the photo library to create a Flipbook";
+"NSPhotoLibraryAddUsageDescription" = "Permissions are required to save images from the app to the device.";
+"NSUserTrackingUsageDescription" = "If you allow it, the ads you see will be more relevant to your interests.";
+
+/*
+  InfoPlist.strings
+  Runner
+
+  Created by T on 2023/08/27.
+  
+*/

@@ -3,7 +3,10 @@ import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:document_scanner_flutter/configs/configs.dart';
 import 'package:document_scanner_flutter/document_scanner_flutter.dart';
+import 'package:flipbook/l10n/l10n.dart';
+import 'package:flipbook/main.dart';
 import 'package:flipbook/model/flip_book.dart';
+import 'package:flipbook/pages/home.dart';
 import 'package:flipbook/state_management/flipbook_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +20,7 @@ import 'edit_flip_book.dart';
 
 class NewFlip extends StatefulWidget {
   const NewFlip({Key? key, required this.onFlipCreate}) : super(key: key);
+
   final VoidCallback onFlipCreate;
   @override
   State<NewFlip> createState() => _NewFlipState();
@@ -64,7 +68,12 @@ class _NewFlipState extends State<NewFlip> {
                   children: [
                     InkWell(
                       onTap: () {
-                        Navigator.pop(context);
+                        print("callll bbbbbbbbbbbbbbbbb");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => FlipBookApp()),
+                        );
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(top: 8.0),
@@ -187,8 +196,10 @@ class _NewFlipState extends State<NewFlip> {
   }
 
   Widget buildBookNameField() {
+    final l10n = L10n.of(context)!;
+
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.09,
+      height: MediaQuery.of(context).size.height * 0.075,
       child: TextField(
         controller: flipBookNameController,
         onSubmitted: (val) {
@@ -201,7 +212,7 @@ class _NewFlipState extends State<NewFlip> {
         maxLength: 30,
         keyboardType: TextInputType.name,
         decoration: InputDecoration(
-          hintText: "Flip Book's Title",
+          hintText: l10n.title,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
           filled: true,
@@ -254,6 +265,7 @@ class _NewFlipState extends State<NewFlip> {
       );
       // context.read<FlipBookProvider>().makeVideoPathNull();
     }
+    widget.onFlipCreate();
     if (mounted) setState(() {});
   }
 
@@ -292,6 +304,7 @@ class _NewFlipState extends State<NewFlip> {
       // 'Failed to get document path or operation cancelled!';
       print("Platform exception");
     }
+    widget.onFlipCreate();
     if (mounted) setState(() {});
   }
 

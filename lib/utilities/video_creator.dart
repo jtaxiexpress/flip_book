@@ -6,6 +6,7 @@ import 'dart:io' show Platform;
 import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_session.dart';
 import 'package:ffmpeg_kit_flutter_full_gpl/return_code.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:media_scanner/media_scanner.dart';
 
 class VideoCreator {
@@ -13,7 +14,7 @@ class VideoCreator {
       String outputFileName, int frameRate) async {
     int width = 1280;
     int height = 720;
-    int fps = frameRate;
+    int fps =  frameRate;
     final extension = images.first.substring(images.first.lastIndexOf('.') + 1);
     print("Extension: $extension, first image: ${images.first}");
     print("basedir: $baseDir");
@@ -25,7 +26,7 @@ class VideoCreator {
         "-start_number 001 "
         "-i ${"$baseDir/image_%03d.$extension"} "
         // "-i ${baseDir}image%03d.png "
-        "-vf scale=-2:588 "
+        "-vf scale=-2:872 "
         "-vcodec libx264 "
         "-crf 25 "
         "-b:v 1500k  "
@@ -41,8 +42,12 @@ class VideoCreator {
 
     if (ReturnCode.isSuccess(await response.getReturnCode())) {
       print('Video created successfully at $outputFileName');
+       if(Platform.isIOS){
+         await ImageGallerySaver.saveFile(outputFileName,
+             isReturnPathOfIOS: true);
+       }
 
-      if (Platform.isAndroid) {
+     else if (Platform.isAndroid) {
         await MediaScanner.loadMedia(path: outputFileName);
       }
       return true;
