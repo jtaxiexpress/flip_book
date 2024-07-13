@@ -3,19 +3,23 @@ import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:document_scanner_flutter/configs/configs.dart';
 import 'package:document_scanner_flutter/document_scanner_flutter.dart';
+// import 'package:document_scanner_flutter/configs/configs.dart';
+// import 'package:document_scanner_flutter/document_scanner_flutter.dart';
 import 'package:flipbook/l10n/l10n.dart';
 import 'package:flipbook/main.dart';
 import 'package:flipbook/model/flip_book.dart';
-import 'package:flipbook/pages/home.dart';
 import 'package:flipbook/state_management/flipbook_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_document_scanner/flutter_document_scanner.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
+// import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
-import '../utilities/banner_ads.dart';
+// import '../utilities/banner_ads.dart';
 import 'edit_flip_book.dart';
 
 class NewFlip extends StatefulWidget {
@@ -32,16 +36,18 @@ class _NewFlipState extends State<NewFlip> {
   List<String> imagesPaths = [];
   String? id;
   Directory? flipDirectory;
+  final _scannerController = DocumentScannerController();
 
   BannerAd? bannerAd;
   @override
   void initState() {
+    requestPermissions();
     // TODO: implement initState
     super.initState();
-    Future.delayed(Duration(milliseconds: 2)).then((value) async {
+    Future.delayed(const Duration(milliseconds: 2)).then((value) async {
       final model = context.read<FlipBookProvider>();
       id = model.generateUniqueId();
-      bannerAd = await model.initBannerAd();
+      // bannerAd = await model.initBannerAd();
       if (mounted) {
         setState(() {});
       }
@@ -72,7 +78,7 @@ class _NewFlipState extends State<NewFlip> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => FlipBookApp()),
+                              builder: (context) => const FlipBookApp()),
                         );
                       },
                       child: Padding(
@@ -171,11 +177,12 @@ class _NewFlipState extends State<NewFlip> {
       ),
       bottomNavigationBar: SafeArea(
         child: FutureBuilder<Widget>(
-          future: Ads.buildBannerWidget(
-            context: context,
-          ),
+          // Todo: ad banner
+          // future: Ads.buildBannerWidget(
+          //   context: context,
+          // ),
           builder: (_, snapshot) {
-            if (!snapshot.hasData) return Text("No Banner yet");
+            if (!snapshot.hasData) return const Text("No Banner yet");
 
             return SizedBox(
               height: 70,
@@ -183,6 +190,7 @@ class _NewFlipState extends State<NewFlip> {
               child: snapshot.data,
             );
           },
+          future: null,
         ),
       ),
     );
@@ -226,8 +234,146 @@ class _NewFlipState extends State<NewFlip> {
     );
   }
 
+  void requestPermissions() {
+    [Permission.storage, Permission.camera].request();
+  }
+
   void onImagesFromGalleryBtnPressed() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+
+      // Pick multiple images from gallery
+      final List<XFile>? images = await picker.pickMultiImage(limit: 20);
+
+      if (images == null || images.isEmpty) {
+        print("No images selected");
+        return;
+      }
+
+      // Save images to flip directory
+      int index = 1;
+      for (XFile image in images) {
+        final extension = image.path.split('.').last;
+        final filePath =
+            "${flipDirectory!.path}/image_${index.toString().padLeft(3, '0')}.$extension";
+
+        try {
+          await image.saveTo(filePath);
+          debugPrint("Saved to $filePath");
+          imagesPaths.add(filePath);
+          index++;
+        } catch (saveError) {
+          print("Error saving image: $saveError");
+        }
+      }
+
+      print("Selected image paths: $imagesPaths");
+
+      if (imagesPaths.isNotEmpty) {
+        if (imagesPaths.length >= 6) {
+          // TODO: Show Ad
+        }
+
+        FlipBook flipBook = FlipBook(
+          id: id!,
+          imagesDirPath: flipDirectory!.path,
+          title: flipBookNameController.text,
+          creationDate: DateTime.now().toIso8601String(),
+          imageUrls: imagesPaths,
+        );
+
+        // Navigate to EditFlipBook screen
+        await Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditFlipBook(
+              flipBook: flipBook,
+              isFromNewFlipPage: true,
+            ),
+          ),
+        );
+      } else {
+        print("No images were successfully saved");
+      }
+
+      // Notify that a flipbook has been created
+      widget.onFlipCreate();
+      if (mounted) setState(() {});
+    } catch (e) {
+      print("Error in image picking process: $e");
+    }
+  }
+  // void onImagesFromGalleryBtnPressed() async {
+  //   try {
+  //     // Request permissions for camera and storage
+  //     bool cameraPermissionGranted =
+  //         await Permission.camera.request().isGranted;
+  //     bool storagePermissionGranted =
+  //         await Permission.storage.request().isGranted;
+  //
+  //     if (!cameraPermissionGranted || !storagePermissionGranted) {
+  //       print("Required permissions are not granted");
+  //       return;
+  //     }
+  //
+  //     // Pick multiple images from gallery
+  //     final List<XFile> images = await picker.pickMultiImage();
+  //     if (images.isEmpty) return;
+  //
+  //     // Save images to flip directory
+  //     int index = 1;
+  //     final extension =
+  //         images.first.path.substring(images.first.path.lastIndexOf('.') + 1);
+  //     for (XFile e in images) {
+  //       final filePath =
+  //           "${flipDirectory!.path}/image_${index.toString().padLeft(3, '0')}.$extension";
+  //       await e.saveTo(filePath);
+  //       debugPrint("Saved to $filePath");
+  //       index++;
+  //       imagesPaths.add(filePath);
+  //     }
+  //     print(imagesPaths);
+  //
+  //     // If there are images saved, proceed to create a FlipBook and navigate
+  //     if (imagesPaths.isNotEmpty) {
+  //       if (imagesPaths.length >= 6) {
+  //         // TODO: Show Ad
+  //       }
+  //       print("new paths: $imagesPaths");
+  //
+  //       FlipBook flipBook = FlipBook(
+  //         id: id!,
+  //         imagesDirPath: flipDirectory!.path,
+  //         title: flipBookNameController.text,
+  //         creationDate: DateTime.now().toIso8601String(),
+  //         imageUrls: imagesPaths,
+  //       );
+  //
+  //       // Navigate to EditFlipBook screen
+  //       await Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (context) => EditFlipBook(
+  //             flipBook: flipBook,
+  //             isFromNewFlipPage: true,
+  //           ),
+  //         ),
+  //       );
+  //
+  //       // context.read<FlipBookProvider>().makeVideoPathNull();
+  //     }
+  //
+  //     // Notify that a flipbook has been created
+  //     widget.onFlipCreate();
+  //     if (mounted) setState(() {});
+  //   } catch (e) {
+  //     print("Error picking images: $e");
+  //   }
+  // }
+
+  void onImagesFromGalleryBtnPresseds() async {
     final List<XFile> images = await picker.pickMultiImage();
+
     if (images.isEmpty) return;
     int index = 1;
     final extension =
@@ -269,8 +415,71 @@ class _NewFlipState extends State<NewFlip> {
     if (mounted) setState(() {});
   }
 
+  void onImagesFromScannerBtnPressedd() async {
+    try {
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => DocumentScanner(
+            controller: _scannerController,
+            generalStyles: const GeneralStyles(
+              baseColor: Colors.white,
+            ),
+            resolutionCamera: ResolutionPreset.high,
+            onSave: (Uint8List imageBytes) async {
+              // Create a temporary file to store the image
+              final tempDir = await Directory.systemTemp.createTemp();
+              final tempFile = File('${tempDir.path}/scanned_image.jpg');
+              await tempFile.writeAsBytes(imageBytes);
+
+              final saveImageToPath =
+                  "${flipDirectory?.path}/image_001${tempFile.path.substring(tempFile.path.lastIndexOf("."))}";
+
+              // Copy the image to the new path
+              await tempFile.copy(saveImageToPath);
+              print("Image saved to path: $saveImageToPath");
+
+              context
+                  .read<FlipBookProvider>()
+                  .incrementCameraScannerCameraUploadCount();
+
+              FlipBook flipBook = FlipBook(
+                id: id!,
+                imagesDirPath: flipDirectory!.path,
+                title: flipBookNameController.text,
+                creationDate: DateTime.now().toIso8601String(),
+                imageUrls: [saveImageToPath],
+              );
+
+              // Clean up the temporary file
+              await tempFile.delete();
+              await tempDir.delete();
+
+              // Navigate to EditFlipBook page
+              await Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditFlipBook(
+                    flipBook: flipBook,
+                    isFromNewFlipPage: true,
+                  ),
+                ),
+              );
+
+              // Call the callback function
+              widget.onFlipCreate();
+              if (mounted) setState(() {});
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      print("Error scanning document: $e");
+    }
+  }
+
   void onImagesFromScannerBtnPressed() async {
     try {
+      // todo: document scanner code
       final image = await DocumentScannerFlutter.launch(
         context,
         source: ScannerFileSource.CAMERA,
@@ -309,7 +518,47 @@ class _NewFlipState extends State<NewFlip> {
   }
 
   void onImagesFromCameraBtnPressed() async {
+    try {
+      final XFile? image = await picker.pickImage(source: ImageSource.camera);
+      // final XFile? image = (await ImagesPicker.openCamera()) as XFile?;
+      if (image == null) return;
+
+      final saveImageToPath =
+          "${flipDirectory!.path}/image_001${image.name.substring(image.name.lastIndexOf("."))}";
+      await image.saveTo(saveImageToPath);
+      print("Image saved to path: $saveImageToPath");
+      context
+          .read<FlipBookProvider>()
+          .incrementCameraScannerCameraUploadCount();
+
+      FlipBook flipBook = FlipBook(
+          id: id!,
+          imagesDirPath: flipDirectory!.path,
+          title: flipBookNameController.text,
+          creationDate: DateTime.now().toIso8601String(),
+          imageUrls: [saveImageToPath]);
+
+      await Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditFlipBook(
+            flipBook: flipBook,
+            isFromNewFlipPage: true,
+            onCreate: widget.onFlipCreate,
+          ),
+        ),
+      );
+      widget.onFlipCreate();
+
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('Error at onImagesFromCameraBtnPressed \n$e');
+    }
+  }
+
+  void onImagesFromCameraBtnPresseds() async {
     final XFile? image = await picker.pickImage(source: ImageSource.camera);
+    // final XFile? image = (await ImagesPicker.openCamera()) as XFile?;
     if (image == null) return;
     final saveImageToPath =
         "${flipDirectory!.path}/image_001${image.name.substring(image.name.lastIndexOf("."))}";
@@ -341,7 +590,7 @@ class _NewFlipState extends State<NewFlip> {
 
   createFlipImagesDirectory(String id) async {
     final appDir = context.read<FlipBookProvider>().applicationDir;
-    final myDir = Directory("${appDir.path}/$id");
+    final myDir = Directory("${appDir!.path}/$id");
     final dir = await myDir.create();
     if (mounted) {
       setState(() {
@@ -352,7 +601,7 @@ class _NewFlipState extends State<NewFlip> {
   }
 
   deleteFlipDirectoryIfEmpty() async {
-    final list = flipDirectory!.listSync();
+    final list = flipDirectory?.listSync() ?? [];
     print('List length: ${list.length}');
     if (list.isEmpty) {
       await flipDirectory!.delete(recursive: true);

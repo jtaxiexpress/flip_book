@@ -3,16 +3,17 @@ import 'dart:io';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/state_management/db_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../utilities/video_creator.dart';
 
 class FlipBookProvider extends ChangeNotifier {
-  late Directory applicationDir;
+  late final Directory? applicationDir;
   final DbHelper _helper = DbHelper.instance;
   List<FlipBook> books = [];
   final _videoCreator = VideoCreator();
@@ -36,15 +37,14 @@ class FlipBookProvider extends ChangeNotifier {
     await showInterstitialAd();
     String outputFile = await _getVideoOutputFileName(flipBook.title);
     final success = await _videoCreator.createVideo(flipBook.imageUrls,
-        flipBook.imagesDirPath!, outputFile,  flipSpeed.toInt());
+        flipBook.imagesDirPath!, outputFile, flipSpeed.toInt());
 
     if (success) {
       print("my download path :- 0");
-      videoOutputPath =  outputFile;
+      videoOutputPath = outputFile;
       notifyListeners();
-    }else{
+    } else {
       print("my download path :- 1");
-
     }
 
     return success;
@@ -126,12 +126,12 @@ class FlipBookProvider extends ChangeNotifier {
         .replaceAll(RegExp(r'\s+'), '');
     //final outputFile = "/storage/emulated/0/DCIM/Camera/$title.mp4";
     String? outputFile = await getDownloadPath();
-    if(outputFile!=null){
+    if (outputFile != null) {
       outputFile = '$outputFile/$title.mp4';
     }
     print('My output File ${outputFile}');
 
-    return outputFile??"";
+    return outputFile ?? "";
   }
 
   Future<String?> getDownloadPath() async {
@@ -139,12 +139,12 @@ class FlipBookProvider extends ChangeNotifier {
     try {
       if (Platform.isIOS) {
         directory = await getApplicationDocumentsDirectory();
-
       } else {
         directory = Directory('/storage/emulated/0/DCIM/Camera');
         // Put file in global download folder, if for an unknown reason it didn't exist, we fallback
         // ignore: avoid_slow_async_io
-        if (!await directory.exists()) directory = await getApplicationDocumentsDirectory();
+        if (!await directory.exists())
+          directory = await getApplicationDocumentsDirectory();
       }
     } catch (err, stack) {
       print("Cannot get download folder path");
@@ -152,10 +152,18 @@ class FlipBookProvider extends ChangeNotifier {
     return directory?.path;
   }
 
-
   Future<void> loadApplicationDir() async {
-    applicationDir = await getApplicationDocumentsDirectory();
-    print('Application directory Path: ${applicationDir.path}');
+    try {
+      final directory = await path_provider.getApplicationSupportDirectory();
+      applicationDir = directory;
+      print('Application directory Path: ${applicationDir!.path}');
+    } catch (e) {
+      print('Error loading application directory: $e');
+      if (e is PlatformException) {
+        print('PlatformException details: ${e.message}');
+      }
+      // Handle the error appropriately, maybe set a default directory or show an error message
+    }
     notifyListeners();
   }
 
@@ -190,14 +198,43 @@ class FlipBookProvider extends ChangeNotifier {
     final List<String> tags = ['FlipBookMaker'];
     final String text = '$caption\n${tags.map((t) => '#$t').join(' ')}';
 
-    return await Share.shareFiles(
-      [videoOutputPath!],
-      text: text,
-      subject: caption,
-      sharePositionOrigin: const Rect.fromLTWH(0, 0, 10, 10),
-      mimeTypes: ['video/mp4'],
-    );
+    try {
+      final result = await Share.shareXFiles(
+        [XFile(videoOutputPath!)],
+        text: text,
+        subject: caption,
+        sharePositionOrigin: const Rect.fromLTWH(0, 0, 10, 10),
+      );
+
+      switch (result.status) {
+        case ShareResultStatus.success:
+          print('Share was successful');
+          break;
+        case ShareResultStatus.dismissed:
+          print('Share was dismissed');
+          break;
+        case ShareResultStatus.unavailable:
+          print('Sharing is unavailable');
+          break;
+      }
+    } catch (e) {
+      print('Error sharing: $e');
+    }
   }
+  // Future<void> startSharing(FlipBook flipBook) async {
+  //   //TODO show interstitial ad
+  //   String caption = flipBook.title.isNotEmpty ? flipBook.title : 'New Video';
+  //   final List<String> tags = ['FlipBookMaker'];
+  //   final String text = '$caption\n${tags.map((t) => '#$t').join(' ')}';
+  //
+  //   return await Share.shareXFiles(
+  //     [XFile(videoOutputPath!)],
+  //     text: text,
+  //     subject: caption,
+  //     sharePositionOrigin: const Rect.fromLTWH(0, 0, 10, 10),
+  //     // mimeTypes: ['video/mp4'],
+  //   );
+  // }
 
   Future<bool> flipBookExists(FlipBook book) async {
     return _helper.recordExists(book);

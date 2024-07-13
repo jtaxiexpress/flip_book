@@ -68,5 +68,9 @@
 	<false/>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+    <string>This app needs camera access to scan documents</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>This app needs photos access to get documents from photo library</string>
 </dict>
 </plist>

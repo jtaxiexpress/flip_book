@@ -3,10 +3,9 @@ import 'dart:math';
 
 import 'package:flipbook/l10n/l10n.dart';
 import 'package:flipbook/model/flip_book.dart';
-import 'package:flipbook/utilities/banner_ads.dart';
+// import 'package:flipbook/utilities/banner_ads.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -17,7 +16,7 @@ import 'edit_flip_book.dart';
 import 'new_flip.dart';
 
 class Home extends StatefulWidget {
-  Home({Key? key}) : super(key: key);
+  const Home({Key? key}) : super(key: key);
 
   @override
   State<Home> createState() => _HomeState();
@@ -42,7 +41,7 @@ class _HomeState extends State<Home> {
     });
     Future.delayed(const Duration(milliseconds: 2)).then((value) async {
       final model = context.read<FlipBookProvider>();
-      bannerAd = await model.initBannerAd();
+      // bannerAd = await model.initBannerAd();
       if (mounted) {
         setState(() {});
       }
@@ -74,14 +73,14 @@ class _HomeState extends State<Home> {
                   : buildBody(),
               Container(
                   alignment: Alignment.bottomLeft,
-                  padding: EdgeInsets.only(top: 10, right: 10),
+                  padding: const EdgeInsets.only(top: 10, right: 10),
                   child: IconButton(
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: () async {
                         _showLicense(context);
                       },
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.info,
                         color: Colors.grey,
                         size: 14,
@@ -115,9 +114,10 @@ class _HomeState extends State<Home> {
       ),
       bottomNavigationBar: SafeArea(
         child: FutureBuilder<Widget>(
-          future: Ads.buildBannerWidget(
-            context: context,
-          ),
+          // TODO: future add banner
+          // future: Ads.buildBannerWidget(
+          //   context: context,
+          // ),
           builder: (_, snapshot) {
             if (!snapshot.hasData) return const Text("...");
 
@@ -127,6 +127,7 @@ class _HomeState extends State<Home> {
               child: snapshot.data,
             );
           },
+          future: null,
         ),
       ),
     );
@@ -171,8 +172,8 @@ class _HomeState extends State<Home> {
       });
     }
     print('Reloading...');
-
-    await context.read<FlipBookProvider>().loadAllBooks();
+    //todo:load all books
+    // await context.read<FlipBookProvider>().loadAllBooks();
     initialBooks = context.read<FlipBookProvider>().books;
     books = initialBooks;
     setState(() {
@@ -201,7 +202,8 @@ class _HomeState extends State<Home> {
                     child: Center(
                       child: Text(
                         capitalizeText(l10n.noFlipbook),
-                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 13),
                       ),
                     ),
                   )
@@ -257,7 +259,7 @@ class _HomeState extends State<Home> {
         children: [
           Text(
             l10n.flipbook,
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
           ),
           //うんち
           // Container(
@@ -315,7 +317,7 @@ class _HomeState extends State<Home> {
       context: context,
       applicationName: packageInfo.appName,
       applicationVersion: packageInfo.version,
-      applicationIcon: Icon(Icons.tag_faces),
+      applicationIcon: const Icon(Icons.tag_faces),
       applicationLegalese: "Minerva K.K",
     );
   }

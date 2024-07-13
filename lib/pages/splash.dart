@@ -8,7 +8,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Home(),
+          builder: (context) => const Home(),
         ),
       );
     });
@@ -63,16 +63,17 @@ class _SplashScreenState extends State<SplashScreen> {
         ? 'ca-app-pub-8319377204356997/4548091779'
         : 'ca-app-pub-8319377204356997/6982683425';
     await AppOpenAd.load(
-        adUnitId: adUnitId,
-        request: const AdRequest(),
-        adLoadCallback: AppOpenAdLoadCallback(onAdLoaded: ((ad) {
-          print('ad is loaded');
-          openAd = ad;
-          openAd!.show();
-        }), onAdFailedToLoad: (error) {
-          print('ad failed to load $error');
-        }),
-        orientation: AppOpenAd.orientationPortrait);
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: AppOpenAdLoadCallback(onAdLoaded: ((ad) {
+        print('ad is loaded');
+        openAd = ad;
+        openAd!.show();
+      }), onAdFailedToLoad: (error) {
+        print('ad failed to load $error');
+      }),
+      orientation: AppOpenAd.orientationPortrait,
+    );
   }
 
   @override

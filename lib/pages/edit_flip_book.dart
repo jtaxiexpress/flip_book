@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+// import 'package:document_scanner_flutter/configs/configs.dart';
+// import 'package:document_scanner_flutter/document_scanner_flutter.dart';
 import 'package:document_scanner_flutter/configs/configs.dart';
 import 'package:document_scanner_flutter/document_scanner_flutter.dart';
 import 'package:flipbook/custom_widgets/flipped_container.dart';
@@ -8,10 +10,11 @@ import 'package:flipbook/l10n/l10n.dart';
 import 'package:flipbook/model/flip_book.dart';
 import 'package:flipbook/pages/preview_flip_book.dart';
 import 'package:flipbook/state_management/flipbook_provider.dart';
-import 'package:flipbook/utilities/banner_ads.dart';
+// import 'package:flipbook/utilities/banner_ads.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_document_scanner/flutter_document_scanner.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -41,7 +44,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
   bool alreadyInsertedInDb = false;
   List<String> list = [];
   bool isReordering = false;
-
+  final _scannerController = DocumentScannerController();
   BannerAd? bannerAd;
 
   @override
@@ -54,7 +57,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
         list = List.from(widget.flipBook.imageUrls);
       });
     }
-    Future.delayed(Duration(milliseconds: 2)).then((value) async {
+    Future.delayed(const Duration(milliseconds: 2)).then((value) async {
       final model = context.read<FlipBookProvider>();
 
       bannerAd = await model.initBannerAd();
@@ -117,11 +120,11 @@ class _EditFlipBookState extends State<EditFlipBook> {
       ),
       bottomNavigationBar: SafeArea(
         child: FutureBuilder<Widget>(
-          future: Ads.buildBannerWidget(
-            context: context,
-          ),
+          // future: Ads.buildBannerWidget(
+          //   context: context,
+          // ),
           builder: (_, snapshot) {
-            if (!snapshot.hasData) return Text("No Banner yet");
+            if (!snapshot.hasData) return const Text("No Banner yet");
 
             return SizedBox(
               height: 70,
@@ -129,6 +132,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
               child: snapshot.data,
             );
           },
+          future: null,
         ),
       ),
     );
@@ -447,7 +451,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
                     padding: EdgeInsets.only(left: size.width * 0.05),
                     child: Text(
                       l10n.flipSpeed,
-                      style: TextStyle(fontSize: 20),
+                      style: const TextStyle(fontSize: 20),
                     ),
                   ),
                   Platform.isIOS
@@ -491,7 +495,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
         leading: const Icon(Icons.animation, color: Colors.orange, size: 28),
         title: Text(
           l10n.flipAnimation,
-          style: TextStyle(fontSize: 18),
+          style: const TextStyle(fontSize: 18),
         ),
         trailing: Platform.isIOS
             ? CupertinoSwitch(
@@ -570,12 +574,12 @@ class _EditFlipBookState extends State<EditFlipBook> {
       await Future.delayed(Duration(milliseconds: flipSpeed.toInt()));
       scrollController.animateTo(
           scrollController.offset + MediaQuery.of(context).size.width * 0.67,
-          duration: Duration(milliseconds: 1),
+          duration: const Duration(milliseconds: 1),
           curve: Curves.fastLinearToSlowEaseIn);
     } else {
       scrollController.animateTo(
           scrollController.offset - MediaQuery.of(context).size.width * 0.67,
-          duration: Duration(milliseconds: 1),
+          duration: const Duration(milliseconds: 1),
           curve: Curves.linear);
     }
   }
@@ -594,34 +598,117 @@ class _EditFlipBookState extends State<EditFlipBook> {
   }
 
   void onImagesFromGalleryBtnPressed() async {
-    final List<XFile> images = await picker.pickMultiImage();
-    int before = widget.flipBook.imageUrls.length;
-    images.forEach((image) async {
-      widget.flipBook.imageUrls.add(image.path);
-    });
-    int afterLength = widget.flipBook.imageUrls.length;
-    if (afterLength > before) {
-      int index = before + 1;
-      images.forEach((image) async {
-        final saveImageToPath = generatePathForNewImage(index, image.name);
-        widget.flipBook.imageUrls[index - 1] = saveImageToPath;
-        index++;
-        await image.saveTo(saveImageToPath);
-        print("Image saved to path: $saveImageToPath");
-      });
-    }
-    if (list.length < widget.flipBook.imageUrls.length) {
-      widget.flipBook.imageUrls.forEach((element) {
-        if (!list.contains(element)) list.add(element);
-      });
-    }
-    context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
+    try {
+      final List<XFile>? pickedImages = await picker.pickMultiImage();
+      if (pickedImages == null || pickedImages.isEmpty) return;
 
-    if (mounted) setState(() {});
+      int startIndex = widget.flipBook.imageUrls.length;
+
+      for (int i = 0; i < pickedImages.length; i++) {
+        XFile image = pickedImages[i];
+        int index = startIndex + i + 1;
+        final saveImageToPath = generatePathForNewImage(index, image.name);
+
+        await image.saveTo(saveImageToPath);
+        widget.flipBook.imageUrls.add(saveImageToPath);
+        print("Image saved to path: $saveImageToPath");
+
+        if (!list.contains(saveImageToPath)) {
+          list.add(saveImageToPath);
+        }
+      }
+
+      context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
+
+      if (mounted) setState(() {});
+    } catch (e) {
+      print("Error in image picking process: $e");
+    }
+  }
+  // void onImagesFromGalleryBtnPressed() async {
+  //   try {
+  //     final List<XFile> images = await picker.pickMultiImage();
+  //     int before = widget.flipBook.imageUrls.length;
+  //     images.forEach((image) async {
+  //       widget.flipBook.imageUrls.add(image.path);
+  //     });
+  //     int afterLength = widget.flipBook.imageUrls.length;
+  //     if (afterLength > before) {
+  //       int index = before + 1;
+  //       images.forEach((image) async {
+  //         final saveImageToPath = generatePathForNewImage(index, image.name);
+  //         widget.flipBook.imageUrls[index - 1] = saveImageToPath;
+  //         index++;
+  //         await image.saveTo(saveImageToPath);
+  //         print("Image saved to path: $saveImageToPath");
+  //       });
+  //     }
+  //     if (list.length < widget.flipBook.imageUrls.length) {
+  //       widget.flipBook.imageUrls.forEach((element) {
+  //         if (!list.contains(element)) list.add(element);
+  //       });
+  //     }
+  //     context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
+  //
+  //     if (mounted) setState(() {});
+  //   } catch (e) {
+  //     print("Error in image picking process: $e");
+  //   }
+  // }
+
+  void onImagesFromScannerBtnPressedd() async {
+    try {
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => DocumentScanner(
+            controller: _scannerController,
+            generalStyles: const GeneralStyles(
+              baseColor: Colors.teal,
+            ),
+            resolutionCamera: ResolutionPreset.high,
+            onSave: (Uint8List imageBytes) async {
+              // Create a temporary file to store the image
+              final tempDir = await Directory.systemTemp.createTemp();
+              final tempFile = File('${tempDir.path}/scanned_image.jpg');
+              await tempFile.writeAsBytes(imageBytes);
+
+              final saveImageToPath = generatePathForNewImage(
+                  widget.flipBook.imageUrls.length + 1, tempFile.path);
+
+              // Copy the image to the new path
+              await tempFile.copy(saveImageToPath);
+              print("Image saved to path: $saveImageToPath");
+
+              widget.flipBook.imageUrls.add(saveImageToPath);
+              context
+                  .read<FlipBookProvider>()
+                  .incrementCameraScannerCameraUploadCount();
+
+              list.add(saveImageToPath);
+
+              // Clean up the temporary file
+              await tempFile.delete();
+              await tempDir.delete();
+
+              // Return to the previous screen
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
+      );
+
+      if (result == true) {
+        context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      print("Error scanning document: $e");
+    }
   }
 
   void onImagesFromScannerBtnPressed() async {
     try {
+      // TODO: document scanner code
       final image = await DocumentScannerFlutter.launch(
         context,
         source: ScannerFileSource.CAMERA,
