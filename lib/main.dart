@@ -1,6 +1,7 @@
 import 'package:flipbook/l10n/l10n.dart';
 import 'package:flipbook/pages/splash.dart';
 import 'package:flipbook/state_management/flipbook_provider.dart';
+import 'package:flipbook/utilities/permission_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +34,24 @@ class FlipBookApp extends StatelessWidget {
       supportedLocales: L10n.supportedLocales,
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class DummyC extends StatelessWidget {
+  const DummyC({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: FloatingActionButton(
+          onPressed: () async {
+            await PermissionHelper.requestPermission();
+          },
+          child: const Text('Click'),
+        ),
+      ),
     );
   }
 }

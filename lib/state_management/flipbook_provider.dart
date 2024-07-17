@@ -13,7 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import '../utilities/video_creator.dart';
 
 class FlipBookProvider extends ChangeNotifier {
-  late final Directory? applicationDir;
+  Directory? applicationDir;
   final DbHelper _helper = DbHelper.instance;
   List<FlipBook> books = [];
   final _videoCreator = VideoCreator();

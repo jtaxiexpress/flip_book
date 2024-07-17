@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flipbook/pages/home.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,13 +67,17 @@ class _SplashScreenState extends State<SplashScreen> {
       adUnitId: adUnitId,
       request: const AdRequest(),
       adLoadCallback: AppOpenAdLoadCallback(onAdLoaded: ((ad) {
-        print('ad is loaded');
+        if (kDebugMode) {
+          print('ad is loaded');
+        }
         openAd = ad;
         openAd!.show();
       }), onAdFailedToLoad: (error) {
-        print('ad failed to load $error');
+        if (kDebugMode) {
+          print('ad failed to load $error');
+        }
       }),
-      orientation: AppOpenAd.orientationPortrait,
+      // orientation: AppOpenAd.orientationPortrait,
     );
   }
 
@@ -85,15 +90,11 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        child: Container(
-          child: Center(
-            child: Image.asset(
-              'images/icon.png',
-              width: 200,
-              height: 200,
-            ),
-          ),
+      body: Center(
+        child: Image.asset(
+          'images/icon.png',
+          width: 200,
+          height: 200,
         ),
       ),
     );

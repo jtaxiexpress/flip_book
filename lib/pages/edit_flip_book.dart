@@ -663,7 +663,7 @@ class _EditFlipBookState extends State<EditFlipBook> {
           builder: (context) => DocumentScanner(
             controller: _scannerController,
             generalStyles: const GeneralStyles(
-              baseColor: Colors.teal,
+              baseColor: Colors.white,
             ),
             resolutionCamera: ResolutionPreset.high,
             onSave: (Uint8List imageBytes) async {

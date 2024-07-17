@@ -590,7 +590,7 @@ class _NewFlipState extends State<NewFlip> {
 
   createFlipImagesDirectory(String id) async {
     final appDir = context.read<FlipBookProvider>().applicationDir;
-    final myDir = Directory("${appDir!.path}/$id");
+    final myDir = Directory("${appDir?.path}/$id");
     final dir = await myDir.create();
     if (mounted) {
       setState(() {
