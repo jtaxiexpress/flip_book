@@ -1,0 +1,6 @@
+framework module document_scanner_flutter {
+  umbrella header "document_scanner_flutter-umbrella.h"
+
+  export *
+  module * { export * }
+}

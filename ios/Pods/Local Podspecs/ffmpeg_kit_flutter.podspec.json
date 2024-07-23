@@ -1,0 +1,243 @@
+{
+  "name": "ffmpeg_kit_flutter",
+  "version": "6.0.3",
+  "summary": "FFmpeg Kit for Flutter",
+  "description": "A Flutter plugin for running FFmpeg and FFprobe commands.",
+  "homepage": "https://github.com/arthenica/ffmpeg-kit",
+  "license": {
+    "file": "../LICENSE"
+  },
+  "authors": {
+    "ARTHENICA": "open-source@arthenica.com"
+  },
+  "platforms": {
+    "ios": null
+  },
+  "requires_arc": true,
+  "static_framework": true,
+  "source": {
+    "path": "."
+  },
+  "source_files": "Classes/**/*",
+  "public_header_files": "Classes/**/*.h",
+  "default_subspecs": "https",
+  "dependencies": {
+    "Flutter": [
+
+    ]
+  },
+  "pod_target_xcconfig": {
+    "DEFINES_MODULE": "YES",
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": "i386"
+  },
+  "subspecs": [
+    {
+      "name": "min",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-min": [
+          "6.0"
+        ]
+      },
+      "platforms": {
+        "ios": "12.1"
+      }
+    },
+    {
+      "name": "min-lts",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-min": [
+          "6.0.LTS"
+        ]
+      },
+      "platforms": {
+        "ios": "10"
+      }
+    },
+    {
+      "name": "min-gpl",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-min-gpl": [
+          "6.0"
+        ]
+      },
+      "platforms": {
+        "ios": "12.1"
+      }
+    },
+    {
+      "name": "min-gpl-lts",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-min-gpl": [
+          "6.0.LTS"
+        ]
+      },
+      "platforms": {
+        "ios": "10"
+      }
+    },
+    {
+      "name": "https",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-https": [
+          "6.0"
+        ]
+      },
+      "platforms": {
+        "ios": "12.1"
+      }
+    },
+    {
+      "name": "https-lts",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-https": [
+          "6.0.LTS"
+        ]
+      },
+      "platforms": {
+        "ios": "10"
+      }
+    },
+    {
+      "name": "https-gpl",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-https-gpl": [
+          "6.0"
+        ]
+      },
+      "platforms": {
+        "ios": "12.1"
+      }
+    },
+    {
+      "name": "https-gpl-lts",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-https-gpl": [
+          "6.0.LTS"
+        ]
+      },
+      "platforms": {
+        "ios": "10"
+      }
+    },
+    {
+      "name": "audio",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-audio": [
+          "6.0"
+        ]
+      },
+      "platforms": {
+        "ios": "12.1"
+      }
+    },
+    {
+      "name": "audio-lts",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-audio": [
+          "6.0.LTS"
+        ]
+      },
+      "platforms": {
+        "ios": "10"
+      }
+    },
+    {
+      "name": "video",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-video": [
+          "6.0"
+        ]
+      },
+      "platforms": {
+        "ios": "12.1"
+      }
+    },
+    {
+      "name": "video-lts",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-video": [
+          "6.0.LTS"
+        ]
+      },
+      "platforms": {
+        "ios": "10"
+      }
+    },
+    {
+      "name": "full",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-full": [
+          "6.0"
+        ]
+      },
+      "platforms": {
+        "ios": "12.1"
+      }
+    },
+    {
+      "name": "full-lts",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-full": [
+          "6.0.LTS"
+        ]
+      },
+      "platforms": {
+        "ios": "10"
+      }
+    },
+    {
+      "name": "full-gpl",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-full-gpl": [
+          "6.0"
+        ]
+      },
+      "platforms": {
+        "ios": "12.1"
+      }
+    },
+    {
+      "name": "full-gpl-lts",
+      "source_files": "Classes/**/*",
+      "public_header_files": "Classes/**/*.h",
+      "dependencies": {
+        "ffmpeg-kit-ios-full-gpl": [
+          "6.0.LTS"
+        ]
+      },
+      "platforms": {
+        "ios": "10"
+      }
+    }
+  ]
+}

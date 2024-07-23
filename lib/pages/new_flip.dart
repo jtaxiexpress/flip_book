@@ -238,7 +238,7 @@ class _NewFlipState extends State<NewFlip> {
     [Permission.storage, Permission.camera].request();
   }
 
-  void onImagesFromGalleryBtnPressed() async {
+  void onImagesFromGalleryBtnPresseddd() async {
     try {
       final ImagePicker picker = ImagePicker();
 
@@ -303,73 +303,65 @@ class _NewFlipState extends State<NewFlip> {
       print("Error in image picking process: $e");
     }
   }
-  // void onImagesFromGalleryBtnPressed() async {
-  //   try {
-  //     // Request permissions for camera and storage
-  //     bool cameraPermissionGranted =
-  //         await Permission.camera.request().isGranted;
-  //     bool storagePermissionGranted =
-  //         await Permission.storage.request().isGranted;
-  //
-  //     if (!cameraPermissionGranted || !storagePermissionGranted) {
-  //       print("Required permissions are not granted");
-  //       return;
-  //     }
-  //
-  //     // Pick multiple images from gallery
-  //     final List<XFile> images = await picker.pickMultiImage();
-  //     if (images.isEmpty) return;
-  //
-  //     // Save images to flip directory
-  //     int index = 1;
-  //     final extension =
-  //         images.first.path.substring(images.first.path.lastIndexOf('.') + 1);
-  //     for (XFile e in images) {
-  //       final filePath =
-  //           "${flipDirectory!.path}/image_${index.toString().padLeft(3, '0')}.$extension";
-  //       await e.saveTo(filePath);
-  //       debugPrint("Saved to $filePath");
-  //       index++;
-  //       imagesPaths.add(filePath);
-  //     }
-  //     print(imagesPaths);
-  //
-  //     // If there are images saved, proceed to create a FlipBook and navigate
-  //     if (imagesPaths.isNotEmpty) {
-  //       if (imagesPaths.length >= 6) {
-  //         // TODO: Show Ad
-  //       }
-  //       print("new paths: $imagesPaths");
-  //
-  //       FlipBook flipBook = FlipBook(
-  //         id: id!,
-  //         imagesDirPath: flipDirectory!.path,
-  //         title: flipBookNameController.text,
-  //         creationDate: DateTime.now().toIso8601String(),
-  //         imageUrls: imagesPaths,
-  //       );
-  //
-  //       // Navigate to EditFlipBook screen
-  //       await Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(
-  //           builder: (context) => EditFlipBook(
-  //             flipBook: flipBook,
-  //             isFromNewFlipPage: true,
-  //           ),
-  //         ),
-  //       );
-  //
-  //       // context.read<FlipBookProvider>().makeVideoPathNull();
-  //     }
-  //
-  //     // Notify that a flipbook has been created
-  //     widget.onFlipCreate();
-  //     if (mounted) setState(() {});
-  //   } catch (e) {
-  //     print("Error picking images: $e");
-  //   }
-  // }
+
+  void onImagesFromGalleryBtnPressed() async {
+    try {
+      // Request permissions for camera and storage
+
+      // Pick multiple images from gallery
+      final List<XFile> images = await picker.pickMultiImage();
+      if (images.isEmpty) return;
+
+      // Save images to flip directory
+      int index = 1;
+      final extension =
+          images.first.path.substring(images.first.path.lastIndexOf('.') + 1);
+      for (XFile e in images) {
+        final filePath =
+            "${flipDirectory!.path}/image_${index.toString().padLeft(3, '0')}.$extension";
+        await e.saveTo(filePath);
+        debugPrint("Saved to $filePath");
+        index++;
+        imagesPaths.add(filePath);
+      }
+      print(imagesPaths);
+
+      // If there are images saved, proceed to create a FlipBook and navigate
+      if (imagesPaths.isNotEmpty) {
+        if (imagesPaths.length >= 6) {
+          // TODO: Show Ad
+        }
+        print("new paths: $imagesPaths");
+
+        FlipBook flipBook = FlipBook(
+          id: id!,
+          imagesDirPath: flipDirectory!.path,
+          title: flipBookNameController.text,
+          creationDate: DateTime.now().toIso8601String(),
+          imageUrls: imagesPaths,
+        );
+
+        // Navigate to EditFlipBook screen
+        await Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditFlipBook(
+              flipBook: flipBook,
+              isFromNewFlipPage: true,
+            ),
+          ),
+        );
+
+        // context.read<FlipBookProvider>().makeVideoPathNull();
+      }
+
+      // Notify that a flipbook has been created
+      widget.onFlipCreate();
+      if (mounted) setState(() {});
+    } catch (e) {
+      print("Error picking images: $e");
+    }
+  }
 
   void onImagesFromGalleryBtnPresseds() async {
     final List<XFile> images = await picker.pickMultiImage();

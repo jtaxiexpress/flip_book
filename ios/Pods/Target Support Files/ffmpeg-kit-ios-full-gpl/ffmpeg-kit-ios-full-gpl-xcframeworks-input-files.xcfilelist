@@ -1,0 +1,9 @@
+${PODS_ROOT}/Target Support Files/ffmpeg-kit-ios-full-gpl/ffmpeg-kit-ios-full-gpl-xcframeworks.sh
+${PODS_ROOT}/ffmpeg-kit-ios-full-gpl/ffmpegkit.xcframework
+${PODS_ROOT}/ffmpeg-kit-ios-full-gpl/libavcodec.xcframework
+${PODS_ROOT}/ffmpeg-kit-ios-full-gpl/libavdevice.xcframework
+${PODS_ROOT}/ffmpeg-kit-ios-full-gpl/libavfilter.xcframework
+${PODS_ROOT}/ffmpeg-kit-ios-full-gpl/libavformat.xcframework
+${PODS_ROOT}/ffmpeg-kit-ios-full-gpl/libavutil.xcframework
+${PODS_ROOT}/ffmpeg-kit-ios-full-gpl/libswresample.xcframework
+${PODS_ROOT}/ffmpeg-kit-ios-full-gpl/libswscale.xcframework

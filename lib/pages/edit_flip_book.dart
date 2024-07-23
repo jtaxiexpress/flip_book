@@ -12,6 +12,7 @@ import 'package:flipbook/pages/preview_flip_book.dart';
 import 'package:flipbook/state_management/flipbook_provider.dart';
 // import 'package:flipbook/utilities/banner_ads.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_document_scanner/flutter_document_scanner.dart';
@@ -19,6 +20,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 class EditFlipBook extends StatefulWidget {
@@ -46,6 +48,11 @@ class _EditFlipBookState extends State<EditFlipBook> {
   bool isReordering = false;
   final _scannerController = DocumentScannerController();
   BannerAd? bannerAd;
+
+  String? id;
+  Directory? flipDirectory;
+  List<String> imagesPaths = [];
+  VoidCallback? onFlipCreate;
 
   @override
   void initState() {
@@ -597,27 +604,126 @@ class _EditFlipBookState extends State<EditFlipBook> {
     print('Flushed the images(${myDir.path}) dir successfully.');
   }
 
+//   void onImagesFromGalleryBtnPressed() async {
+//     try {
+// // Request permissions for camera and storage
+//       bool cameraPermissionGranted =
+//           await Permission.camera.request().isGranted;
+//       bool storagePermissionGranted =
+//           await Permission.storage.request().isGranted;
+
+//       if (!cameraPermissionGranted || !storagePermissionGranted) {
+//         print("Required permissions are not granted");
+//         return;
+//       }
+
+// // Pick multiple images from gallery
+//       final List<XFile> images = await picker.pickMultiImage();
+//       if (images.isEmpty) return;
+
+// // Save images to flip directory
+//       int index = 1;
+//       final extension =
+//           images.first.path.substring(images.first.path.lastIndexOf('.') + 1);
+//       for (XFile e in images) {
+//         final filePath =
+//             "${flipDirectory!.path}/image_${index.toString().padLeft(3, '0')}.$extension";
+//         await e.saveTo(filePath);
+//         debugPrint("Saved to $filePath");
+//         index++;
+//         imagesPaths.add(filePath);
+//       }
+//       print(imagesPaths);
+
+// // If there are images saved, proceed to create a FlipBook and navigate
+//       if (imagesPaths.isNotEmpty) {
+//         if (imagesPaths.length >= 6) {
+// // TODO: Show Ad
+//         }
+//         print("new paths: $imagesPaths");
+
+//         FlipBook flipBook = FlipBook(
+//           id: id!,
+//           imagesDirPath: flipDirectory!.path,
+//           title: flipBookNameController.text,
+//           creationDate: DateTime.now().toIso8601String(),
+//           imageUrls: imagesPaths,
+//         );
+
+// // Navigate to EditFlipBook screen
+//         await Navigator.pushReplacement(
+//           context,
+//           MaterialPageRoute(
+//             builder: (context) => EditFlipBook(
+//               flipBook: flipBook,
+//               isFromNewFlipPage: true,
+//             ),
+//           ),
+//         );
+
+// // context.read<FlipBookProvider>().makeVideoPathNull();
+//       }
+
+// // Notify that a flipbook has been created
+//       widget.onFlipCreate();
+//       if (mounted) setState(() {});
+//     } catch (e) {
+//       print("Error picking images: $e");
+//     }
+//   }
+
+  // void onImagesFromGalleryBtnPressed() async {
+  //   try {
+  //     final List<XFile>? pickedImages = await picker.pickMultiImage();
+  //     if (pickedImages == null || pickedImages.isEmpty) return;
+
+  //     int startIndex = widget.flipBook.imageUrls.length;
+
+  //     for (int i = 0; i < pickedImages.length; i++) {
+  //       XFile image = pickedImages[i];
+  //       int index = startIndex + i + 1;
+  //       final saveImageToPath = generatePathForNewImage(index, image.name);
+
+  //       await image.saveTo(saveImageToPath);
+  //       widget.flipBook.imageUrls.add(saveImageToPath);
+  //       print("Image saved to path: $saveImageToPath");
+
+  //       if (!list.contains(saveImageToPath)) {
+  //         list.add(saveImageToPath);
+  //       }
+  //     }
+
+  //     context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
+
+  //     if (mounted) setState(() {});
+  //   } catch (e) {
+  //     print("Error in image picking process: $e");
+  //   }
+  // }
+
   void onImagesFromGalleryBtnPressed() async {
     try {
-      final List<XFile>? pickedImages = await picker.pickMultiImage();
-      if (pickedImages == null || pickedImages.isEmpty) return;
-
-      int startIndex = widget.flipBook.imageUrls.length;
-
-      for (int i = 0; i < pickedImages.length; i++) {
-        XFile image = pickedImages[i];
-        int index = startIndex + i + 1;
-        final saveImageToPath = generatePathForNewImage(index, image.name);
-
-        await image.saveTo(saveImageToPath);
-        widget.flipBook.imageUrls.add(saveImageToPath);
-        print("Image saved to path: $saveImageToPath");
-
-        if (!list.contains(saveImageToPath)) {
-          list.add(saveImageToPath);
-        }
+      final List<XFile> images = await picker.pickMultiImage();
+      int before = widget.flipBook.imageUrls.length;
+      images.forEach((image) async {
+        widget.flipBook.imageUrls.add(image.path);
+      });
+      int afterLength = widget.flipBook.imageUrls.length;
+      if (afterLength > before) {
+        int index = before + 1;
+        images.forEach((image) async {
+          final saveImageToPath = generatePathForNewImage(index, image.name);
+          widget.flipBook.imageUrls[index - 1] = saveImageToPath;
+          index++;
+          await image.saveTo(saveImageToPath);
+          print("Image saved to path: $saveImageToPath");
+        });
       }
-
+      if (list.length < widget.flipBook.imageUrls.length) {
+        widget.flipBook.imageUrls.forEach((element) {
+          if (!list.contains(element)) list.add(element);
+        });
+      }
       context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
 
       if (mounted) setState(() {});
@@ -625,36 +731,6 @@ class _EditFlipBookState extends State<EditFlipBook> {
       print("Error in image picking process: $e");
     }
   }
-  // void onImagesFromGalleryBtnPressed() async {
-  //   try {
-  //     final List<XFile> images = await picker.pickMultiImage();
-  //     int before = widget.flipBook.imageUrls.length;
-  //     images.forEach((image) async {
-  //       widget.flipBook.imageUrls.add(image.path);
-  //     });
-  //     int afterLength = widget.flipBook.imageUrls.length;
-  //     if (afterLength > before) {
-  //       int index = before + 1;
-  //       images.forEach((image) async {
-  //         final saveImageToPath = generatePathForNewImage(index, image.name);
-  //         widget.flipBook.imageUrls[index - 1] = saveImageToPath;
-  //         index++;
-  //         await image.saveTo(saveImageToPath);
-  //         print("Image saved to path: $saveImageToPath");
-  //       });
-  //     }
-  //     if (list.length < widget.flipBook.imageUrls.length) {
-  //       widget.flipBook.imageUrls.forEach((element) {
-  //         if (!list.contains(element)) list.add(element);
-  //       });
-  //     }
-  //     context.read<FlipBookProvider>().updateFlipBook(widget.flipBook);
-  //
-  //     if (mounted) setState(() {});
-  //   } catch (e) {
-  //     print("Error in image picking process: $e");
-  //   }
-  // }
 
   void onImagesFromScannerBtnPressedd() async {
     try {

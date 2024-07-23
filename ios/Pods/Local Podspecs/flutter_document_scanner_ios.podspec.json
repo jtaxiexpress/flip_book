@@ -1,0 +1,33 @@
+{
+  "name": "flutter_document_scanner_ios",
+  "version": "0.5.0",
+  "summary": "An iOS implementation of the flutter_document_scanner plugin.",
+  "description": "A Flutter plugin that allows the management of taking, cropping and applying filters to an image, using the camera plugin",
+  "homepage": "https://github.com/criistian14/flutter_document_scanner",
+  "license": {
+    "type": "BSD",
+    "file": "../LICENSE"
+  },
+  "authors": {
+    "Christian Betancourt": "criistian-14@hotmail.com"
+  },
+  "source": {
+    "path": "."
+  },
+  "source_files": "Classes/**/*.{swift,h,m,mm,c,cpp}",
+  "dependencies": {
+    "Flutter": [
+
+    ]
+  },
+  "static_framework": true,
+  "platforms": {
+    "ios": "9.0"
+  },
+  "pod_target_xcconfig": {
+    "DEFINES_MODULE": "YES",
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": "i386"
+  },
+  "swift_versions": "5.0",
+  "swift_version": "5.0"
+}
