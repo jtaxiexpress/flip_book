@@ -2,11 +2,11 @@ name: flipbook
 description: A new Flutter project.
 
 publish_to: "none"
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   #  sdk: ">=3.4.3 <4.0.0"
-  sdk: ">=3.3.3 <4.0.0"
+  sdk: ">=3.1.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -14,7 +14,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  intl: ^0.19.0
+  intl: ^0.18.1
   cupertino_icons: ^1.0.8
   path:
   document_scanner_flutter:
@@ -42,7 +42,7 @@ dependencies:
   media_scanner: ^2.1.0
   share_plus: ^9.0.0
   sqflite: ^2.3.3+1
-  google_mobile_ads: ^5.1.0
+  google_mobile_ads: ^5.0.0
   flutter_launcher_icons: ^0.13.1
   package_info_plus: ^8.0.0
 dependency_overrides:
